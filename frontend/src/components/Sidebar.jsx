@@ -9,7 +9,9 @@ import {
   BookOpen, 
   Workflow, 
   SlidersHorizontal,
-  ExternalLink
+  ExternalLink,
+  HelpCircle,
+  Scale
 } from 'lucide-react';
 
 export default function Sidebar({ currentView, setCurrentView }) {
@@ -35,6 +37,13 @@ export default function Sidebar({ currentView, setCurrentView }) {
       items: [
         { id: 'how_it_works', label: 'How It Works', icon: Workflow },
         { id: 'docs', label: 'Documentation', icon: BookOpen },
+        { id: 'faq', label: 'FAQ & Knowledge Base', icon: HelpCircle },
+      ]
+    },
+    {
+      title: 'LEGAL',
+      items: [
+        { id: 'terms', label: 'Terms & Conditions', icon: Scale },
       ]
     }
   ];
@@ -56,35 +65,45 @@ export default function Sidebar({ currentView, setCurrentView }) {
     >
       {/* Brand Header */}
       <div
+        onClick={() => setCurrentView('overview')}
         style={{
-          padding: '18px 16px',
+          padding: '16px',
           borderBottom: '1px solid var(--border-subtle)',
           display: 'flex',
           alignItems: 'center',
-          gap: '10px'
+          gap: '10px',
+          cursor: 'pointer',
+          transition: 'background-color 0.15s ease'
         }}
+        title="VoiceGuard — Audio Authenticity Platform"
       >
         <div
           style={{
-            width: '28px',
-            height: '28px',
-            borderRadius: 'var(--radius-sm)',
-            backgroundColor: 'var(--surface-elevated)',
+            width: '32px',
+            height: '32px',
+            borderRadius: '8px',
+            backgroundColor: 'rgba(13, 17, 23, 0.9)',
             border: '1px solid var(--border-strong)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'var(--accent-cyan)'
+            overflow: 'hidden',
+            padding: '2px',
+            flexShrink: 0
           }}
         >
-          <AudioWaveform size={16} />
+          <img
+            src="/logo.png"
+            alt="VoiceGuard Logo"
+            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          />
         </div>
         <div>
           <div style={{ fontSize: '0.9375rem', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
             VoiceGuard
           </div>
           <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
-            Audio Authenticity Platform
+            Real Voices. A Safer Tomorrow.
           </div>
         </div>
       </div>

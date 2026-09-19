@@ -9,9 +9,13 @@ import HistoryView from './views/HistoryView';
 import ReportsView from './views/ReportsView';
 import HowItWorksView from './views/HowItWorksView';
 import DocumentationView from './views/DocumentationView';
+import FaqView from './views/FaqView';
+import TermsView from './views/TermsView';
+import SplashScreen from './components/SplashScreen';
 import { analyzeAudioFile } from './api';
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
   const [currentView, setCurrentView] = useState('overview');
   const [analysisResult, setAnalysisResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -129,6 +133,9 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-app)' }}>
+      {/* Brand Opening Transition Splash Screen */}
+      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
+
       {/* Fixed Left Sidebar Shell */}
       <Sidebar
         currentView={currentView}
@@ -200,6 +207,14 @@ export default function App() {
 
           {currentView === 'docs' && (
             <DocumentationView />
+          )}
+
+          {currentView === 'faq' && (
+            <FaqView onNavigate={setCurrentView} />
+          )}
+
+          {currentView === 'terms' && (
+            <TermsView onNavigate={setCurrentView} />
           )}
         </main>
       </div>

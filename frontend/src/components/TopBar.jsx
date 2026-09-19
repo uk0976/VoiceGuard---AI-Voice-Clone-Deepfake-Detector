@@ -19,6 +19,8 @@ export default function TopBar({ currentView, onReset, hasResult }) {
     reports: 'Forensic Compliance Reports',
     how_it_works: 'Signal Detection Methodology',
     docs: 'System Specifications & API',
+    faq: 'Frequently Asked Questions & Support',
+    terms: 'Terms & Conditions of Service',
   };
 
   return (
