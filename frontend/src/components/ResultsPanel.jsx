@@ -1,74 +1,144 @@
 import React from 'react';
-import { AlertTriangle, CheckCircle2, ShieldAlert, ShieldCheck, Activity, Cpu, HelpCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ShieldAlert, ShieldCheck, Activity, Cpu, Radio, Zap, Info } from 'lucide-react';
 
 export default function ResultsPanel({ result, isLoading, error }) {
   if (isLoading) {
     return (
-      <div className="vg-card" style={{ width: '100%', textAlign: 'center', padding: '48px 24px' }}>
-        <div style={{ position: 'relative', width: '72px', height: '72px', margin: '0 auto 20px' }}>
+      <div className="vg-card" style={{ width: '100%', textAlign: 'center', padding: '56px 24px', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'relative', width: '84px', height: '84px', margin: '0 auto 24px' }}>
           <div
             className="pulse-loader"
             style={{
               position: 'absolute',
               inset: 0,
               borderRadius: '50%',
-              backgroundColor: 'rgba(6, 182, 212, 0.2)',
+              backgroundColor: 'rgba(6, 182, 212, 0.15)',
               border: '2px solid #06b6d4'
             }}
           />
           <div
             style={{
               position: 'absolute',
-              inset: '16px',
+              inset: '18px',
               borderRadius: '50%',
               backgroundColor: '#06b6d4',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#0b0f19'
+              color: '#0b0f19',
+              boxShadow: '0 0 20px rgba(6, 182, 212, 0.6)'
             }}
           >
-            <Activity size={24} />
+            <Activity size={28} />
           </div>
         </div>
-        <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#f8fafc', marginBottom: '8px' }}>
-          Analyzing Voice Architecture
+
+        <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#f8fafc', marginBottom: '8px' }}>
+          Deconstructing Audio Waveform
         </h3>
-        <p style={{ fontSize: '0.875rem', color: '#94a3b8', maxWidth: '380px', margin: '0 auto' }}>
-          Running Hugging Face Wav2Vec2 neural classifier and extracting pitch jitter, spectral flatness & breath patterns...
+        <p style={{ fontSize: '0.875rem', color: '#94a3b8', maxWidth: '420px', margin: '0 auto 20px', lineHeight: '1.5' }}>
+          Extracting acoustic features, tracking F0 pitch jitter with pyin, and querying Wav2Vec2 deepfake classification network...
         </p>
+
+        {/* Animated Feature Steps */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.72rem', color: '#38bdf8', background: 'rgba(6, 182, 212, 0.1)', padding: '4px 10px', borderRadius: '20px', border: '1px solid rgba(6, 182, 212, 0.2)' }}>
+            16kHz Mono Resampling
+          </span>
+          <span style={{ fontSize: '0.72rem', color: '#38bdf8', background: 'rgba(6, 182, 212, 0.1)', padding: '4px 10px', borderRadius: '20px', border: '1px solid rgba(6, 182, 212, 0.2)' }}>
+            Spectral Flatness
+          </span>
+          <span style={{ fontSize: '0.72rem', color: '#38bdf8', background: 'rgba(6, 182, 212, 0.1)', padding: '4px 10px', borderRadius: '20px', border: '1px solid rgba(6, 182, 212, 0.2)' }}>
+            F0 Jitter Variance
+          </span>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="vg-card" style={{ width: '100%', borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+      <div className="vg-card" style={{ width: '100%', borderColor: 'rgba(239, 68, 68, 0.4)', background: 'rgba(239, 68, 68, 0.04)' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
-          <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
-            <AlertTriangle size={24} />
+          <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }}>
+            <AlertTriangle size={26} />
           </div>
           <div>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: '#f87171' }}>Analysis Failed</h3>
-            <p style={{ fontSize: '0.875rem', color: '#94a3b8', marginTop: '4px' }}>{error}</p>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#f87171' }}>Analysis Failed</h3>
+            <p style={{ fontSize: '0.875rem', color: '#cbd5e1', marginTop: '4px' }}>{error}</p>
           </div>
         </div>
       </div>
     );
   }
 
+  // Architectural Pipeline Preview when waiting for input
   if (!result) {
     return (
-      <div className="vg-card" style={{ width: '100%', textAlign: 'center', padding: '40px 20px', borderStyle: 'dashed' }}>
-        <div style={{ display: 'inline-flex', padding: '14px', borderRadius: '50%', background: 'rgba(100, 116, 139, 0.1)', color: '#64748b', marginBottom: '14px' }}>
-          <HelpCircle size={28} />
+      <div className="vg-card" style={{ width: '100%', padding: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
+          <div>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#f8fafc' }}>
+              Dual-Engine Inspection Matrix
+            </h3>
+            <p style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+              VoiceGuard combines machine learning pattern recognition with physical acoustics
+            </p>
+          </div>
+          <span style={{ fontSize: '0.7rem', color: '#06b6d4', background: 'rgba(6, 182, 212, 0.1)', padding: '3px 8px', borderRadius: '4px', border: '1px solid rgba(6, 182, 212, 0.2)' }}>
+            System Ready
+          </span>
         </div>
-        <h3 style={{ fontSize: '1rem', fontWeight: '600', color: '#94a3b8', marginBottom: '4px' }}>
-          No Analysis Results Yet
-        </h3>
-        <p style={{ fontSize: '0.85rem', color: '#64748b' }}>
-          Upload an audio recording on the left to inspect deepfake confidence and acoustic findings.
-        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px', display: 'flex', gap: '12px' }}>
+            <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(6, 182, 212, 0.1)', color: '#06b6d4', height: 'fit-content' }}>
+              <Cpu size={18} />
+            </div>
+            <div>
+              <h4 style={{ fontSize: '0.88rem', fontWeight: '600', color: '#f1f5f9' }}>
+                1. Pretrained Wav2Vec2 Classifier (75% Weight)
+              </h4>
+              <p style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '2px', lineHeight: '1.4' }}>
+                Evaluates latent representations against thousands of real vs. synthesized neural voice samples.
+              </p>
+            </div>
+          </div>
+
+          <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px', display: 'flex', gap: '12px' }}>
+            <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', height: 'fit-content' }}>
+              <Activity size={18} />
+            </div>
+            <div>
+              <h4 style={{ fontSize: '0.88rem', fontWeight: '600', color: '#f1f5f9' }}>
+                2. F0 Pitch Jitter Tracking (Librosa Pyin)
+              </h4>
+              <p style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '2px', lineHeight: '1.4' }}>
+                Measures microscopic cycle-to-cycle frequency variations. Unnaturally stable pitch flags synthetic vocal tracts.
+              </p>
+            </div>
+          </div>
+
+          <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px', display: 'flex', gap: '12px' }}>
+            <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(147, 51, 234, 0.1)', color: '#a855f7', height: 'fit-content' }}>
+              <Radio size={18} />
+            </div>
+            <div>
+              <h4 style={{ fontSize: '0.88rem', fontWeight: '600', color: '#f1f5f9' }}>
+                3. Spectral Flatness & Breath Cadence
+              </h4>
+              <p style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '2px', lineHeight: '1.4' }}>
+                Detects vocoder noise smearing and missing natural breathing pauses typical of automated deepfakes.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ marginTop: '16px', padding: '10px', borderRadius: '8px', background: 'rgba(255, 255, 255, 0.02)', border: '1px dashed #334155', textAlign: 'center' }}>
+          <p style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+            👉 <strong style={{ color: '#06b6d4' }}>Select a demo clip below</strong> or upload a custom audio file to see full score breakdown.
+          </p>
+        </div>
       </div>
     );
   }
@@ -78,48 +148,91 @@ export default function ResultsPanel({ result, isLoading, error }) {
   const modelPercent = Math.round((result.model_score || 0) * 100);
   const flags = result.heuristic_flags || [];
 
-  const verdictColor = isFake ? 'var(--danger-red)' : 'var(--safe-green)';
+  const verdictColor = isFake ? '#ef4444' : '#10b981';
+  const strokeDashoffset = 283 - (283 * confidencePercent) / 100;
 
   return (
-    <div className="vg-card" style={{ width: '100%', transition: 'all 0.4s ease' }}>
-      {/* Header Banner */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #1e293b', paddingBottom: '16px', marginBottom: '20px' }}>
+    <div className="vg-card" style={{ width: '100%', transition: 'all 0.3s ease' }}>
+      {/* Top Banner Verdict */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #1e293b', paddingBottom: '18px', marginBottom: '20px' }}>
         <div>
-          <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600' }}>
-            Verdict Assessment
+          <span style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: '700' }}>
+            Detection Verdict
           </span>
           <div style={{ marginTop: '6px' }}>
             {isFake ? (
-              <span className="badge-danger">
-                <ShieldAlert size={16} />
-                SUSPECTED AI VOICE CLONE
-              </span>
+              <div className="badge-danger">
+                <ShieldAlert size={18} />
+                <span>SUSPECTED AI VOICE CLONE</span>
+              </div>
             ) : (
-              <span className="badge-safe">
-                <ShieldCheck size={16} />
-                AUTHENTIC HUMAN VOICE
-              </span>
+              <div className="badge-safe">
+                <ShieldCheck size={18} />
+                <span>AUTHENTIC HUMAN VOICE</span>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Large Confidence Gauge Display */}
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '2.5rem', fontWeight: '800', lineHeight: 1, color: verdictColor, fontFamily: "'JetBrains Mono', monospace" }}>
-            {confidencePercent}%
+        {/* Circular Gauge Meter */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{ position: 'relative', width: '70px', height: '70px' }}>
+            <svg width="70" height="70" viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
+              <circle
+                cx="50"
+                cy="50"
+                r="45"
+                fill="transparent"
+                stroke="#1e293b"
+                strokeWidth="10"
+              />
+              <circle
+                cx="50"
+                cy="50"
+                r="45"
+                fill="transparent"
+                stroke={verdictColor}
+                strokeWidth="10"
+                strokeDasharray="283"
+                strokeDashoffset={strokeDashoffset}
+                strokeLinecap="round"
+                style={{ transition: 'stroke-dashoffset 1s ease' }}
+              />
+            </svg>
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1rem',
+                fontWeight: '800',
+                color: verdictColor,
+                fontFamily: "'JetBrains Mono', monospace"
+              }}
+            >
+              {confidencePercent}%
+            </div>
           </div>
-          <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '500' }}>
-            {isFake ? 'Deepfake Confidence' : 'Authenticity Confidence'}
-          </span>
+
+          <div>
+            <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '500' }}>
+              Final Confidence
+            </div>
+            <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#f1f5f9' }}>
+              {isFake ? 'High Synthetic Likelihood' : 'Natural Human Speech'}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Progress Bar Meter */}
-      <div style={{ marginBottom: '24px' }}>
+      <div style={{ marginBottom: '22px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', marginBottom: '6px', fontWeight: '500' }}>
-          <span>0% (Human)</span>
-          <span>50% Threshold</span>
-          <span>100% (Synthetic)</span>
+          <span>0% Natural</span>
+          <span style={{ color: '#06b6d4', fontWeight: '600' }}>50% Decision Line</span>
+          <span>100% Synthetic</span>
         </div>
         <div className="meter-container">
           <div
@@ -128,61 +241,61 @@ export default function ResultsPanel({ result, isLoading, error }) {
               width: `${confidencePercent}%`,
               backgroundColor: verdictColor,
               boxShadow: isFake
-                ? '0 0 12px rgba(239, 68, 68, 0.4)'
-                : '0 0 12px rgba(16, 185, 129, 0.4)'
+                ? '0 0 14px rgba(239, 68, 68, 0.5)'
+                : '0 0 14px rgba(16, 185, 129, 0.5)'
             }}
           />
         </div>
       </div>
 
       {/* Breakdown Details Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
-        <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', padding: '12px 14px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '22px' }}>
+        <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '0.75rem', marginBottom: '4px' }}>
             <Cpu size={14} color="#06b6d4" />
-            Neural Model Score
+            Neural Model Probability
           </div>
-          <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#f8fafc', fontFamily: "'JetBrains Mono', monospace" }}>
+          <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#f8fafc', fontFamily: "'JetBrains Mono', monospace" }}>
             {modelPercent}%
           </div>
           <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
-            Wav2Vec2 classifier weight (75%)
+            Wav2Vec2 sequence classifier
           </div>
         </div>
 
-        <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', padding: '12px 14px' }}>
+        <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '0.75rem', marginBottom: '4px' }}>
             <Activity size={14} color="#06b6d4" />
-            Signal Heuristics
+            Acoustic Signal Physics
           </div>
-          <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#f8fafc', fontFamily: "'JetBrains Mono', monospace" }}>
-            {flags.length > 0 ? `${flags.length} Flagged` : 'Clean'}
+          <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#f8fafc', fontFamily: "'JetBrains Mono', monospace" }}>
+            {flags.length > 0 ? `${flags.length} Flagged` : '0 Flags'}
           </div>
           <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
-            Acoustic physics checks (25%)
+            Librosa signal heuristics
           </div>
         </div>
       </div>
 
       {/* Heuristic Explainability Flags */}
       <div>
-        <h4 style={{ fontSize: '0.85rem', fontWeight: '700', color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '10px' }}>
-          Acoustic Anomaly Analysis ({flags.length})
+        <h4 style={{ fontSize: '0.8rem', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>
+          Physical Voice Anomalies
         </h4>
 
         {flags.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {flags.map((flag, idx) => (
-              <div key={idx} className="flag-chip">
+              <div key={idx} className="flag-chip" style={{ width: '100%' }}>
                 <AlertTriangle size={16} style={{ flexShrink: 0 }} />
-                <span>{flag}</span>
+                <span style={{ fontWeight: '500' }}>{flag}</span>
               </div>
             ))}
           </div>
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', color: '#6ee7b7', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem' }}>
-            <CheckCircle2 size={16} color="#10b981" />
-            <span>No unnatural pitch, spectral, or breath anomalies detected in audio sample.</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', color: '#6ee7b7', padding: '12px 14px', borderRadius: '8px', fontSize: '0.85rem' }}>
+            <CheckCircle2 size={18} color="#10b981" style={{ flexShrink: 0 }} />
+            <span>Harmonic formant decay, F0 jitter variance, and natural breath spacing are within biological ranges.</span>
           </div>
         )}
       </div>

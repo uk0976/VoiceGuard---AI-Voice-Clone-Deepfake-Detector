@@ -58,6 +58,62 @@ def health_check():
     return {"status": "healthy"}
 
 
+@app.get("/api/demo_clips")
+def list_demo_clips():
+    """Returns curated demo clips with descriptions for judges and evaluation."""
+    clips = [
+        {
+            "id": "real_1",
+            "filename": "real_1.wav",
+            "type": "real",
+            "title": "Human Voice (Sample 1)",
+            "duration": "13.8s",
+            "description": "Authentic human speech with natural pitch variance and micro-pauses"
+        },
+        {
+            "id": "fake_1",
+            "filename": "fake_1.wav",
+            "type": "fake",
+            "title": "AI Voice Clone (Sample 1)",
+            "duration": "7.4s",
+            "description": "High-fidelity neural voice synthesis reading corresponding text"
+        },
+        {
+            "id": "real_2",
+            "filename": "real_2.wav",
+            "type": "real",
+            "title": "Human Voice (Sample 2)",
+            "duration": "12.0s",
+            "description": "Natural cadence voice with organic formant distribution"
+        },
+        {
+            "id": "fake_2",
+            "filename": "fake_2.wav",
+            "type": "fake",
+            "title": "AI Voice Clone (Sample 2)",
+            "duration": "8.7s",
+            "description": "Synthesized voice with flattened pitch contour"
+        },
+        {
+            "id": "real_3",
+            "filename": "real_3.wav",
+            "type": "real",
+            "title": "Human Voice (Sample 3)",
+            "duration": "6.6s",
+            "description": "Short conversational human voice recording"
+        },
+        {
+            "id": "fake_3",
+            "filename": "fake_3.wav",
+            "type": "fake",
+            "title": "AI Voice Clone (Sample 3)",
+            "duration": "2.4s",
+            "description": "Short synthetic deepfake audio fragment"
+        }
+    ]
+    return {"clips": clips}
+
+
 @app.post("/analyze", response_model=AnalysisResponse)
 async def analyze_file(file: UploadFile = File(...)):
     """
