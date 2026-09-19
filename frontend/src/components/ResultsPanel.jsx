@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { AlertTriangle, CheckCircle2, ShieldAlert, ShieldCheck, Activity, Cpu, Radio, Sparkles, UserCheck, Bot } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ShieldAlert, ShieldCheck, Activity, Cpu, Radio, Sparkles, UserCheck, Bot, Info } from 'lucide-react';
 
 function useCountUp(targetVal, duration = 750) {
   const [count, setCount] = useState(0);
@@ -343,6 +343,11 @@ export default function ResultsPanel({ result, isLoading, error }) {
                 <span style={{ fontWeight: '500' }}>{flag}</span>
               </div>
             ))}
+          </div>
+        ) : isFake ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.25)', color: '#94a3b8', padding: '12px 14px', borderRadius: '8px', fontSize: '0.85rem' }}>
+            <Info size={18} color="#38bdf8" style={{ flexShrink: 0 }} />
+            <span>No acoustic anomalies independently flagged — detection is based primarily on neural model analysis.</span>
           </div>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', color: '#6ee7b7', padding: '12px 14px', borderRadius: '8px', fontSize: '0.85rem' }}>

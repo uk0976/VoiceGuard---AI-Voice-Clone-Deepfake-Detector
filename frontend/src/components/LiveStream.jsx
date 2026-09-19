@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Radio, AlertTriangle, ShieldAlert, ShieldCheck, Cpu, Activity, Volume2, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
+import { Mic, MicOff, Radio, AlertTriangle, ShieldAlert, ShieldCheck, Cpu, Activity, Volume2, CheckCircle2, Loader2, RefreshCw, Info } from 'lucide-react';
 
 export default function LiveStream() {
   const [isListening, setIsListening] = useState(false);
@@ -657,12 +657,17 @@ export default function LiveStream() {
                 </div>
               ))}
             </div>
+          ) : latestData && isFake ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.25)', color: '#94a3b8', padding: '12px 14px', borderRadius: '8px', fontSize: '0.85rem' }}>
+              <Info size={18} color="#38bdf8" style={{ flexShrink: 0 }} />
+              <span>No acoustic anomalies independently flagged — detection is based primarily on neural model analysis.</span>
+            </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: isListening ? 'rgba(6, 182, 212, 0.08)' : 'rgba(16, 185, 129, 0.08)', border: isListening ? '1px solid rgba(6, 182, 212, 0.25)' : '1px solid rgba(16, 185, 129, 0.25)', color: isListening ? '#38bdf8' : '#6ee7b7', padding: '12px 14px', borderRadius: '8px', fontSize: '0.85rem' }}>
               <CheckCircle2 size={18} color={isListening ? '#06b6d4' : '#10b981'} style={{ flexShrink: 0 }} />
               <span>
                 {latestData
-                  ? 'No synthetic anomalies detected in live speech.'
+                  ? 'Pitch jitter, harmonic decay, and breathing pauses fall within natural human ranges. No anomalies detected.'
                   : isListening
                   ? 'Listening... Evaluating speech acoustics in 1.5s windows.'
                   : 'Start listening to monitor voice physics in real time.'}
