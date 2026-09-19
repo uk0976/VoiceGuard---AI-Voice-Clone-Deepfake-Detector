@@ -17,7 +17,7 @@ FLAG_FLAT_SPECTRUM = "Flat spectral envelope"
 FLAG_MISSING_PAUSES = "Missing natural breath pauses"
 
 
-def extract_pitch_jitter(y: np.ndarray, sr: int) -> Tuple[float, bool]:
+def extract_pitch_jitter(y: np.ndarray, sr: int) -> Tuple[float, bool, float, float]:
     """
     Computes pitch jitter (period-to-period F0 variance) and F0 intonation stability.
     
@@ -27,7 +27,7 @@ def extract_pitch_jitter(y: np.ndarray, sr: int) -> Tuple[float, bool]:
     Synthetic TTS voices or vocoders maintain unnaturally rigid, stable pitch contours even after room transmission.
     
     - Threshold: Relative jitter < 0.018 or normalized F0 std < 0.06 indicates synthetic stability.
-    - Returns: (jitter_score [0..1 where 1 is synthetic], flag_triggered)
+    - Returns: (jitter_score [0..1 where 1 is synthetic], flag_triggered, relative_jitter, std_f0)
     """
     try:
         # Optimize pyin range for speech fundamental frequencies (65Hz - 500Hz)
@@ -50,7 +50,7 @@ def extract_pitch_jitter(y: np.ndarray, sr: int) -> Tuple[float, bool]:
         
         # If very few voiced frames detected (< 5 frames), cannot reliably compute jitter
         if len(valid_f0) < 5:
-            return 0.0, False
+            return 0.0, False, 0.0, 0.0
         
         # Calculate cycle-to-cycle relative jitter: |F0[i+1] - F0[i]| / F0[i]
         f0_diffs = np.abs(np.diff(valid_f0))
@@ -66,14 +66,14 @@ def extract_pitch_jitter(y: np.ndarray, sr: int) -> Tuple[float, bool]:
         else:
             jitter_score = max(0.0, min(1.0, 1.0 - (relative_jitter / 0.025)))
         
-        return jitter_score, is_synthetic
+        return jitter_score, is_synthetic, relative_jitter, std_f0
         
     except Exception as e:
         logger.warning(f"Error computing pitch jitter: {e}")
-        return 0.0, False
+        return 0.0, False, 0.0, 0.0
 
 
-def extract_spectral_flatness(y: np.ndarray, sr: int) -> Tuple[float, bool]:
+def extract_spectral_flatness(y: np.ndarray, sr: int) -> Tuple[float, bool, float]:
     """
     Computes spectral flatness of the audio.
     
@@ -83,7 +83,7 @@ def extract_spectral_flatness(y: np.ndarray, sr: int) -> Tuple[float, bool]:
     Vocoded or synthetic audio artifacts exhibit higher spectral dispersion and white phase leakage (> 0.023).
     
     - Threshold: Mean spectral flatness > 0.023 indicates an unnaturally flat, vocoded envelope.
-    - Returns: (flatness_score [0..1 where 1 is synthetic], flag_triggered)
+    - Returns: (flatness_score [0..1 where 1 is synthetic], flag_triggered, mean_flatness)
     """
     try:
         flatness = librosa.feature.spectral_flatness(y=y)
@@ -97,14 +97,14 @@ def extract_spectral_flatness(y: np.ndarray, sr: int) -> Tuple[float, bool]:
         if is_flat:
             flatness_score = max(0.70, flatness_score)
         
-        return flatness_score, is_flat
+        return flatness_score, is_flat, mean_flatness
         
     except Exception as e:
         logger.warning(f"Error computing spectral flatness: {e}")
-        return 0.0, False
+        return 0.0, False, 0.0
 
 
-def extract_pause_patterns(y: np.ndarray, sr: int) -> Tuple[float, bool]:
+def extract_pause_patterns(y: np.ndarray, sr: int) -> Tuple[float, bool, float, float]:
     """
     Analyzes silence and breathing pause patterns in speech.
     
@@ -115,34 +115,35 @@ def extract_pause_patterns(y: np.ndarray, sr: int) -> Tuple[float, bool]:
     
     - For clips >= 2.5 seconds: if non-silent speech occupies > 96% of the clip with zero
       pauses >= 150ms, it indicates missing natural breath pauses.
-    - Returns: (pause_score [0..1 where 1 is synthetic], flag_triggered)
+    - Returns: (pause_score [0..1 where 1 is synthetic], flag_triggered, pause_ratio, speech_ratio)
     """
     try:
         duration = len(y) / sr
         if duration < 2.0:
             # Short chunk cannot be penalized for missing breaths
-            return 0.0, False
+            return 0.0, False, 0.0, 1.0
         
         # Detect non-silent intervals with 25dB below peak threshold (immune to ambient mic noise)
         intervals = librosa.effects.split(y=y, top_db=25, frame_length=1024, hop_length=256)
         
         if len(intervals) == 0:
-            return 0.0, False
+            return 0.0, False, 1.0, 0.0
         
         # Calculate total non-silent duration
         voiced_samples = sum(end - start for start, end in intervals)
-        speech_ratio = voiced_samples / len(y)
+        speech_ratio = float(voiced_samples / len(y))
+        pause_ratio = max(0.0, 1.0 - speech_ratio)
         
         # If speech is virtually non-stop (> 96% active) with only 1 unbroken segment
         is_missing_pauses = (len(intervals) <= 1 and duration >= 3.0 and speech_ratio > 0.96)
         
         pause_score = 0.85 if is_missing_pauses else 0.05
         
-        return pause_score, is_missing_pauses
+        return pause_score, is_missing_pauses, pause_ratio, speech_ratio
         
     except Exception as e:
         logger.warning(f"Error analyzing pause patterns: {e}")
-        return 0.0, False
+        return 0.0, False, 0.0, 1.0
 
 
 def compute_heuristics(waveform: np.ndarray, sample_rate: int) -> Dict[str, Any]:
@@ -153,7 +154,8 @@ def compute_heuristics(waveform: np.ndarray, sample_rate: int) -> Dict[str, Any]
     {
       "heuristic_score": float,
       "flags": list[str],
-      "details": dict
+      "details": dict,
+      "metrics": dict
     }
     """
     # Ensure 1D audio
@@ -164,19 +166,25 @@ def compute_heuristics(waveform: np.ndarray, sample_rate: int) -> Dict[str, Any]
     flags: List[str] = []
     
     # 1. Pitch Jitter (Weight: 40%)
-    jitter_score, flag_jitter = extract_pitch_jitter(y, sample_rate)
+    jitter_score, flag_jitter, rel_jitter, std_f0 = extract_pitch_jitter(y, sample_rate)
     if flag_jitter:
         flags.append(FLAG_LOW_JITTER)
         
     # 2. Spectral Flatness (Weight: 30%)
-    flatness_score, flag_flatness = extract_spectral_flatness(y, sample_rate)
+    flatness_score, flag_flatness, mean_flatness = extract_spectral_flatness(y, sample_rate)
     if flag_flatness:
         flags.append(FLAG_FLAT_SPECTRUM)
         
     # 3. Pause / Breath Pattern (Weight: 30%)
-    pause_score, flag_pause = extract_pause_patterns(y, sample_rate)
+    pause_score, flag_pause, pause_ratio, speech_ratio = extract_pause_patterns(y, sample_rate)
     if flag_pause:
         flags.append(FLAG_MISSING_PAUSES)
+
+    # 4. Spectral Centroid
+    try:
+        sc = float(np.mean(librosa.feature.spectral_centroid(y=y, sr=sample_rate)))
+    except Exception:
+        sc = 0.0
         
     # Weighted aggregation
     if flags:
@@ -192,5 +200,13 @@ def compute_heuristics(waveform: np.ndarray, sample_rate: int) -> Dict[str, Any]
             "jitter_score": round(jitter_score, 2),
             "flatness_score": round(flatness_score, 2),
             "pause_score": round(pause_score, 2)
+        },
+        "metrics": {
+            "pitch_jitter": round(rel_jitter, 4),
+            "f0_std": round(std_f0, 4),
+            "spectral_flatness": round(mean_flatness, 4),
+            "pause_ratio": round(pause_ratio, 3),
+            "speech_ratio": round(speech_ratio, 3),
+            "spectral_centroid_hz": round(sc, 1)
         }
     }

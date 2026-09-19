@@ -6,7 +6,7 @@ Provides /analyze REST endpoint and /ws/stream WebSocket endpoint.
 import io
 import os
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import soundfile as sf
 import librosa
 import numpy as np
@@ -61,6 +61,7 @@ class AnalysisResponse(BaseModel):
     confidence: float
     model_score: float
     heuristic_flags: List[str]
+    metrics: Optional[Dict[str, Any]] = None
 
 
 @app.get("/")
@@ -185,7 +186,8 @@ async def analyze_file(file: UploadFile = File(...)):
             label=result["label"],
             confidence=result["confidence"],
             model_score=result["model_score"],
-            heuristic_flags=result["heuristic_flags"]
+            heuristic_flags=result["heuristic_flags"],
+            metrics=result.get("metrics")
         )
 
     except HTTPException:
@@ -302,7 +304,8 @@ async def websocket_stream(websocket: WebSocket):
                     "chunk_score": chunk_score,
                     "rolling_avg_score": rolling_avg_score,
                     "label": label,
-                    "heuristic_flags": result["heuristic_flags"]
+                    "heuristic_flags": result["heuristic_flags"],
+                    "metrics": result.get("metrics")
                 }
                 await websocket.send_json(response_payload)
 

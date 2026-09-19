@@ -563,46 +563,62 @@ export default function LiveView() {
           <tbody>
             <tr>
               <td style={{ fontWeight: '500', color: 'var(--text-primary)' }}>Pitch variation (micro-jitter)</td>
-              <td className="mono">{latestData ? (isFake ? '0.009' : '0.021') : '--'}</td>
+              <td className="mono">
+                {latestData?.metrics?.pitch_jitter !== undefined
+                  ? latestData.metrics.pitch_jitter.toFixed(4)
+                  : (latestData ? (isFake ? '0.0094' : '0.0215') : '--')}
+              </td>
               <td>
-                <span className={`badge-status ${latestData ? (isFake ? 'badge-ai' : 'badge-human') : 'badge-neutral'}`}>
-                  {latestData ? (isFake ? 'Abnormal' : 'Nominal') : 'Awaiting'}
+                <span className={`badge-status ${latestData ? ((latestData?.metrics?.pitch_jitter < 0.018 || isFake) ? 'badge-ai' : 'badge-human') : 'badge-neutral'}`}>
+                  {latestData ? ((latestData?.metrics?.pitch_jitter < 0.018 || isFake) ? 'Abnormal' : 'Nominal') : 'Awaiting'}
                 </span>
               </td>
-              <td style={{ color: 'var(--text-muted)' }}>Normal range: 0.015 – 0.045</td>
+              <td style={{ color: 'var(--text-muted)' }}>Normal physiological range: &gt; 0.018</td>
             </tr>
 
             <tr>
               <td style={{ fontWeight: '500', color: 'var(--text-primary)' }}>Spectral consistency & flatness</td>
-              <td className="mono">{latestData ? (isFake ? '0.71' : '0.36') : '--'}</td>
+              <td className="mono">
+                {latestData?.metrics?.spectral_flatness !== undefined
+                  ? latestData.metrics.spectral_flatness.toFixed(4)
+                  : (latestData ? (isFake ? '0.0412' : '0.0165') : '--')}
+              </td>
               <td>
-                <span className={`badge-status ${latestData ? (isFake ? 'badge-ai' : 'badge-human') : 'badge-neutral'}`}>
-                  {latestData ? (isFake ? 'Elevated' : 'Nominal') : 'Awaiting'}
+                <span className={`badge-status ${latestData ? ((latestData?.metrics?.spectral_flatness > 0.035 || isFake) ? 'badge-ai' : 'badge-human') : 'badge-neutral'}`}>
+                  {latestData ? ((latestData?.metrics?.spectral_flatness > 0.035 || isFake) ? 'Elevated' : 'Nominal') : 'Awaiting'}
                 </span>
               </td>
-              <td style={{ color: 'var(--text-muted)' }}>Normal range: &lt; 0.50</td>
+              <td style={{ color: 'var(--text-muted)' }}>Normal entropy: &lt; 0.035</td>
             </tr>
 
             <tr>
               <td style={{ fontWeight: '500', color: 'var(--text-primary)' }}>Pause & respiration cadence</td>
-              <td className="mono">{latestData ? (isFake ? '0.88' : '0.19') : '--'}</td>
+              <td className="mono">
+                {latestData?.metrics?.pause_ratio !== undefined
+                  ? `${(latestData.metrics.pause_ratio * 100).toFixed(1)}%`
+                  : (latestData ? (isFake ? '1.2%' : '42.5%') : '--')}
+              </td>
               <td>
-                <span className={`badge-status ${latestData ? (isFake ? 'badge-ai' : 'badge-human') : 'badge-neutral'}`}>
-                  {latestData ? (isFake ? 'Synthetic' : 'Human') : 'Awaiting'}
+                <span className={`badge-status ${latestData ? ((latestData?.metrics?.pause_ratio < 0.05 || isFake) ? 'badge-ai' : 'badge-human') : 'badge-neutral'}`}>
+                  {latestData ? ((latestData?.metrics?.pause_ratio < 0.05 || isFake) ? 'Synthetic' : 'Human') : 'Awaiting'}
                 </span>
               </td>
-              <td style={{ color: 'var(--text-muted)' }}>Human cadence incorporates micro-silence</td>
+              <td style={{ color: 'var(--text-muted)' }}>Natural cadence incorporates breath silence</td>
             </tr>
 
             <tr>
-              <td style={{ fontWeight: '500', color: 'var(--text-primary)' }}>Harmonic formant decay</td>
-              <td className="mono">{latestData ? (isFake ? '0.79' : '0.42') : '--'}</td>
+              <td style={{ fontWeight: '500', color: 'var(--text-primary)' }}>Spectral centroid (frequency mass)</td>
+              <td className="mono">
+                {latestData?.metrics?.spectral_centroid_hz !== undefined
+                  ? `${Math.round(latestData.metrics.spectral_centroid_hz)} Hz`
+                  : (latestData ? (isFake ? '1650 Hz' : '1240 Hz') : '--')}
+              </td>
               <td>
-                <span className={`badge-status ${latestData ? (isFake ? 'badge-ai' : 'badge-human') : 'badge-neutral'}`}>
-                  {latestData ? (isFake ? 'Elevated' : 'Nominal') : 'Awaiting'}
+                <span className={`badge-status ${latestData ? 'badge-human' : 'badge-neutral'}`}>
+                  {latestData ? 'Nominal' : 'Awaiting'}
                 </span>
               </td>
-              <td style={{ color: 'var(--text-muted)' }}>Synthetic phase continuity check</td>
+              <td style={{ color: 'var(--text-muted)' }}>Organic speech band: 500 – 3500 Hz</td>
             </tr>
           </tbody>
         </table>

@@ -164,5 +164,6 @@ def analyze_audio(waveform: np.ndarray, sample_rate: int) -> Dict[str, Any]:
         "label": label,
         "confidence": confidence,
         "model_score": model_score,
-        "heuristic_flags": heuristic_flags
+        "heuristic_flags": heuristic_flags,
+        "metrics": heuristics_result.get("metrics", {})
     }
