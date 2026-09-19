@@ -57,13 +57,15 @@ export default function App() {
       {/* Top Navigation Bar */}
       <header
         style={{
-          borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-          backgroundColor: 'rgba(10, 14, 23, 0.92)',
-          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          backgroundColor: 'rgba(7, 11, 20, 0.72)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           position: 'sticky',
           top: 0,
           zIndex: 50,
-          padding: '14px 28px'
+          padding: '14px 28px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)'
         }}
       >
         <div style={{ maxWidth: '1240px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -73,12 +75,13 @@ export default function App() {
               style={{
                 width: '36px',
                 height: '36px',
-                borderRadius: '9px',
-                background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)',
+                borderRadius: '10px',
+                background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 60%, #6366f1 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 2px 10px rgba(6, 182, 212, 0.35)',
+                boxShadow: '0 2px 14px rgba(6, 182, 212, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
+                border: '1px solid rgba(255, 255, 255, 0.18)',
                 color: '#ffffff'
               }}
             >
@@ -99,12 +102,15 @@ export default function App() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                background: '#0d1322',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
+                background: 'rgba(13, 21, 38, 0.65)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
                 padding: '6px 12px',
                 borderRadius: '8px',
                 fontSize: '0.78rem',
-                color: '#cbd5e1'
+                color: '#cbd5e1',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
               }}
             >
               <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block', boxShadow: '0 0 8px #10b981' }} />
@@ -115,7 +121,7 @@ export default function App() {
               <button
                 onClick={handleReset}
                 style={{
-                  background: 'transparent',
+                  background: 'rgba(255, 255, 255, 0.04)',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
                   color: '#94a3b8',
                   padding: '6px 12px',
@@ -125,7 +131,7 @@ export default function App() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  transition: 'border-color 150ms ease, color 150ms ease'
+                  transition: 'all 150ms ease'
                 }}
               >
                 <RefreshCw size={12} /> Reset
@@ -165,12 +171,15 @@ export default function App() {
             <div
               style={{
                 position: 'relative',
-                background: '#0c1220',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                background: 'rgba(10, 16, 30, 0.65)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                border: '1px solid rgba(255, 255, 255, 0.09)',
+                borderTop: '1px solid rgba(255, 255, 255, 0.18)',
                 padding: '4px',
-                borderRadius: '12px',
+                borderRadius: '13px',
                 display: 'inline-flex',
-                boxShadow: 'inset 0 1px 3px rgba(0, 0, 0, 0.4)'
+                boxShadow: '0 8px 24px -4px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(0, 0, 0, 0.3)'
               }}
             >
               {/* Sliding Indicator */}
@@ -181,9 +190,11 @@ export default function App() {
                   bottom: '4px',
                   left: activeTab === 'upload' ? '4px' : 'calc(50% + 2px)',
                   width: 'calc(50% - 6px)',
-                  background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)',
-                  borderRadius: '8px',
-                  boxShadow: '0 2px 10px rgba(6, 182, 212, 0.35)',
+                  background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 55%, #6366f1 100%)',
+                  borderRadius: '9px',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.4)',
+                  boxShadow: '0 2px 14px rgba(6, 182, 212, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25)',
                   transition: 'left 240ms cubic-bezier(0.16, 1, 0.3, 1)',
                   zIndex: 1,
                   pointerEvents: 'none'
@@ -280,21 +291,25 @@ export default function App() {
             style={{
               marginTop: '28px',
               padding: '14px 20px',
-              background: 'rgba(13, 20, 36, 0.5)',
-              border: '1px solid rgba(255, 255, 255, 0.05)',
-              borderRadius: '10px',
+              background: 'rgba(11, 18, 34, 0.45)',
+              backdropFilter: 'blur(14px)',
+              WebkitBackdropFilter: 'blur(14px)',
+              border: '1px solid rgba(255, 255, 255, 0.07)',
+              borderTop: '1px solid rgba(255, 255, 255, 0.14)',
+              borderRadius: '12px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
               flexWrap: 'wrap',
               gap: '12px',
               fontSize: '0.78rem',
-              color: '#64748b'
+              color: '#64748b',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <strong style={{ color: '#94a3b8' }}>Model:</strong>
-              <code style={{ background: '#0b1120', color: '#38bdf8', padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>Wav2Vec2 Deepfake-V2</code>
+              <code style={{ background: 'rgba(6, 182, 212, 0.08)', color: '#38bdf8', padding: '3px 8px', borderRadius: '5px', border: '1px solid rgba(6, 182, 212, 0.22)' }}>Wav2Vec2 Deepfake-V2</code>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <strong style={{ color: '#94a3b8' }}>Heuristics:</strong>

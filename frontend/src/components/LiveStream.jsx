@@ -395,14 +395,18 @@ export default function LiveStream() {
         <div
           className={isListening ? 'live-listening-pulse' : ''}
           style={{
-            background: '#090d16',
-            border: isListening ? '1px solid #06b6d4' : '1px solid #1e293b',
-            borderRadius: '10px',
+            background: 'rgba(9, 14, 26, 0.65)',
+            backdropFilter: 'blur(14px)',
+            WebkitBackdropFilter: 'blur(14px)',
+            border: isListening ? '1px solid #06b6d4' : '1px solid rgba(255, 255, 255, 0.08)',
+            borderTop: isListening ? '1px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.16)',
+            borderRadius: '14px',
             padding: '20px',
             textAlign: 'center',
             marginBottom: '20px',
             position: 'relative',
             overflow: 'hidden',
+            boxShadow: 'inset 0 1px 3px rgba(0, 0, 0, 0.4)',
             transition: 'all 0.3s ease'
           }}
         >
@@ -434,12 +438,13 @@ export default function LiveStream() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'rgba(9, 13, 22, 0.85)',
-                backdropFilter: 'blur(2px)',
+                background: 'rgba(8, 12, 23, 0.75)',
+                backdropFilter: 'blur(6px)',
+                WebkitBackdropFilter: 'blur(6px)',
                 padding: '16px'
               }}
             >
-              <p style={{ fontSize: '0.85rem', color: '#64748b' }}>
+              <p style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
                 {streamStatus === 'connecting'
                   ? 'Requesting microphone permissions and connecting to server...'
                   : streamStatus === 'disconnected'
@@ -615,7 +620,7 @@ export default function LiveStream() {
 
         {/* Breakdown Details Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '22px' }}>
-          <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px' }}>
+          <div style={{ background: 'rgba(11, 18, 34, 0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.07)', borderTop: '1px solid rgba(255, 255, 255, 0.14)', borderRadius: '12px', padding: '14px', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.2)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '0.75rem', marginBottom: '4px' }}>
               <Activity size={14} color="#06b6d4" />
               Latest Chunk
@@ -628,7 +633,7 @@ export default function LiveStream() {
             </div>
           </div>
 
-          <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px' }}>
+          <div style={{ background: 'rgba(11, 18, 34, 0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.07)', borderTop: '1px solid rgba(255, 255, 255, 0.14)', borderRadius: '12px', padding: '14px', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.2)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '0.75rem', marginBottom: '4px' }}>
               <Cpu size={14} color="#06b6d4" />
               Rolling Average
@@ -658,12 +663,12 @@ export default function LiveStream() {
               ))}
             </div>
           ) : latestData && isFake ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.25)', color: '#94a3b8', padding: '12px 14px', borderRadius: '8px', fontSize: '0.85rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(56, 189, 248, 0.08)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(56, 189, 248, 0.28)', borderTop: '1px solid rgba(255, 255, 255, 0.15)', color: '#cbd5e1', padding: '12px 14px', borderRadius: '9px', fontSize: '0.85rem' }}>
               <Info size={18} color="#38bdf8" style={{ flexShrink: 0 }} />
               <span>No acoustic anomalies independently flagged — detection is based primarily on neural model analysis.</span>
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: isListening ? 'rgba(6, 182, 212, 0.08)' : 'rgba(16, 185, 129, 0.08)', border: isListening ? '1px solid rgba(6, 182, 212, 0.25)' : '1px solid rgba(16, 185, 129, 0.25)', color: isListening ? '#38bdf8' : '#6ee7b7', padding: '12px 14px', borderRadius: '8px', fontSize: '0.85rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: isListening ? 'rgba(6, 182, 212, 0.08)' : 'rgba(16, 185, 129, 0.1)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: isListening ? '1px solid rgba(6, 182, 212, 0.3)' : '1px solid rgba(16, 185, 129, 0.35)', borderTop: '1px solid rgba(255, 255, 255, 0.15)', color: isListening ? '#38bdf8' : '#6ee7b7', padding: '12px 14px', borderRadius: '9px', fontSize: '0.85rem' }}>
               <CheckCircle2 size={18} color={isListening ? '#06b6d4' : '#10b981'} style={{ flexShrink: 0 }} />
               <span>
                 {latestData

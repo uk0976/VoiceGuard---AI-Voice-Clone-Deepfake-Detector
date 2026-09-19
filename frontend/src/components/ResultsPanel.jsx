@@ -140,8 +140,8 @@ export default function ResultsPanel({ result, isLoading, error }) {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px', display: 'flex', gap: '12px' }}>
-            <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(6, 182, 212, 0.1)', color: '#06b6d4', height: 'fit-content' }}>
+          <div style={{ background: 'rgba(11, 18, 34, 0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.07)', borderTop: '1px solid rgba(255, 255, 255, 0.14)', borderRadius: '12px', padding: '14px', display: 'flex', gap: '12px', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.2)' }}>
+            <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(6, 182, 212, 0.12)', color: '#06b6d4', height: 'fit-content' }}>
               <Cpu size={18} />
             </div>
             <div>
@@ -154,8 +154,8 @@ export default function ResultsPanel({ result, isLoading, error }) {
             </div>
           </div>
 
-          <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px', display: 'flex', gap: '12px' }}>
-            <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', height: 'fit-content' }}>
+          <div style={{ background: 'rgba(11, 18, 34, 0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.07)', borderTop: '1px solid rgba(255, 255, 255, 0.14)', borderRadius: '12px', padding: '14px', display: 'flex', gap: '12px', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.2)' }}>
+            <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(56, 189, 248, 0.12)', color: '#38bdf8', height: 'fit-content' }}>
               <Activity size={18} />
             </div>
             <div>
@@ -168,8 +168,8 @@ export default function ResultsPanel({ result, isLoading, error }) {
             </div>
           </div>
 
-          <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px', display: 'flex', gap: '12px' }}>
-            <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(147, 51, 234, 0.1)', color: '#a855f7', height: 'fit-content' }}>
+          <div style={{ background: 'rgba(11, 18, 34, 0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.07)', borderTop: '1px solid rgba(255, 255, 255, 0.14)', borderRadius: '12px', padding: '14px', display: 'flex', gap: '12px', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.2)' }}>
+            <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(139, 92, 246, 0.12)', color: '#a78bfa', height: 'fit-content' }}>
               <Radio size={18} />
             </div>
             <div>
@@ -302,7 +302,7 @@ export default function ResultsPanel({ result, isLoading, error }) {
 
       {/* Breakdown Details Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '22px' }}>
-        <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px' }}>
+        <div style={{ background: 'rgba(11, 18, 34, 0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.07)', borderTop: '1px solid rgba(255, 255, 255, 0.14)', borderRadius: '12px', padding: '14px', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '0.75rem', marginBottom: '4px' }}>
             <Cpu size={14} color="#06b6d4" />
             Neural Model Score
@@ -315,7 +315,7 @@ export default function ResultsPanel({ result, isLoading, error }) {
           </div>
         </div>
 
-        <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px' }}>
+        <div style={{ background: 'rgba(11, 18, 34, 0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.07)', borderTop: '1px solid rgba(255, 255, 255, 0.14)', borderRadius: '12px', padding: '14px', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '0.75rem', marginBottom: '4px' }}>
             <Activity size={14} color="#06b6d4" />
             Acoustic Checks
@@ -345,12 +345,12 @@ export default function ResultsPanel({ result, isLoading, error }) {
             ))}
           </div>
         ) : isFake ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.25)', color: '#94a3b8', padding: '12px 14px', borderRadius: '8px', fontSize: '0.85rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(56, 189, 248, 0.08)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(56, 189, 248, 0.28)', borderTop: '1px solid rgba(255, 255, 255, 0.15)', color: '#cbd5e1', padding: '12px 14px', borderRadius: '9px', fontSize: '0.85rem' }}>
             <Info size={18} color="#38bdf8" style={{ flexShrink: 0 }} />
             <span>No acoustic anomalies independently flagged — detection is based primarily on neural model analysis.</span>
           </div>
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', color: '#6ee7b7', padding: '12px 14px', borderRadius: '8px', fontSize: '0.85rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(16, 185, 129, 0.1)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(16, 185, 129, 0.35)', borderTop: '1px solid rgba(255, 255, 255, 0.15)', color: '#6ee7b7', padding: '12px 14px', borderRadius: '9px', fontSize: '0.85rem' }}>
             <CheckCircle2 size={18} color="#10b981" style={{ flexShrink: 0 }} />
             <span>Pitch jitter, harmonic decay, and breathing pauses fall within natural human ranges. No anomalies detected.</span>
           </div>

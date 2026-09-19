@@ -138,18 +138,24 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
         onClick={() => handleTest(clip)}
         style={{
           backgroundColor: isSelected
-            ? (isReal ? 'rgba(16, 185, 129, 0.08)' : 'rgba(239, 68, 68, 0.08)')
-            : '#131d33',
+            ? (isReal ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)')
+            : 'rgba(13, 20, 37, 0.65)',
           border: isSelected
             ? (isReal ? '1px solid #10b981' : '1px solid #ef4444')
-            : '1px solid #1e293b',
-          borderRadius: '10px',
+            : '1px solid rgba(255, 255, 255, 0.08)',
+          borderTop: isSelected
+            ? (isReal ? '1px solid #34d399' : '1px solid #f87171')
+            : '1px solid rgba(255, 255, 255, 0.14)',
+          borderRadius: '11px',
           padding: '14px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
           cursor: isLoading ? 'not-allowed' : 'pointer',
-          position: 'relative'
+          position: 'relative',
+          boxShadow: isSelected
+            ? (isReal ? '0 0 20px rgba(16, 185, 129, 0.25)' : '0 0 20px rgba(239, 68, 68, 0.25)')
+            : '0 2px 8px rgba(0, 0, 0, 0.2)'
         }}
       >
         <div>
@@ -159,7 +165,7 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
               <span style={{ fontWeight: '700', fontSize: '0.92rem', color: '#f8fafc' }}>
                 {clip.label}
               </span>
-              <span style={{ fontSize: '0.7rem', color: '#64748b', background: '#0f172a', padding: '2px 6px', borderRadius: '4px' }}>
+              <span style={{ fontSize: '0.7rem', color: '#64748b', background: 'rgba(255, 255, 255, 0.05)', padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
                 {clip.duration}
               </span>
             </div>
@@ -247,15 +253,13 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
       className="vg-card"
       style={{
         width: '100%',
-        marginTop: '28px',
-        backgroundColor: '#0c1322',
-        border: '1px solid #1e293b'
+        marginTop: '28px'
       }}
     >
       {/* Header with Visual Secondary Cue */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', flexWrap: 'wrap', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(6, 182, 212, 0.1)', color: '#06b6d4' }}>
+          <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(6, 182, 212, 0.12)', color: '#06b6d4', boxShadow: '0 0 12px rgba(6, 182, 212, 0.2)' }}>
             <Sparkles size={18} />
           </div>
           <div>
@@ -274,15 +278,19 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
         {/* Section 1: Authentic Human Voices */}
         <div
           style={{
-            backgroundColor: '#0f172a',
-            border: '1px solid rgba(16, 185, 129, 0.25)',
-            borderRadius: '12px',
-            padding: '16px'
+            background: 'rgba(9, 14, 26, 0.52)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            border: '1px solid rgba(16, 185, 129, 0.28)',
+            borderTop: '1px solid rgba(255, 255, 255, 0.14)',
+            borderRadius: '14px',
+            padding: '16px',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', borderBottom: '1px solid #1e293b', paddingBottom: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', borderBottom: '1px solid rgba(255, 255, 255, 0.06)', paddingBottom: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', fontWeight: '700', color: '#34d399', background: 'rgba(16, 185, 129, 0.15)', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', fontWeight: '700', color: '#34d399', background: 'rgba(16, 185, 129, 0.15)', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.35)', boxShadow: '0 0 10px rgba(16, 185, 129, 0.2)' }}>
                 <CheckCircle2 size={13} /> REAL VOICES
               </span>
             </div>
@@ -297,15 +305,19 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
         {/* Section 2: AI-Generated Clones */}
         <div
           style={{
-            backgroundColor: '#0f172a',
-            border: '1px solid rgba(239, 68, 68, 0.25)',
-            borderRadius: '12px',
-            padding: '16px'
+            background: 'rgba(9, 14, 26, 0.52)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            border: '1px solid rgba(239, 68, 68, 0.28)',
+            borderTop: '1px solid rgba(255, 255, 255, 0.14)',
+            borderRadius: '14px',
+            padding: '16px',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', borderBottom: '1px solid #1e293b', paddingBottom: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', borderBottom: '1px solid rgba(255, 255, 255, 0.06)', paddingBottom: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', fontWeight: '700', color: '#f87171', background: 'rgba(239, 68, 68, 0.15)', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', fontWeight: '700', color: '#f87171', background: 'rgba(239, 68, 68, 0.15)', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.35)', boxShadow: '0 0 10px rgba(239, 68, 68, 0.2)' }}>
                 <AlertOctagon size={13} /> AI VOICES
               </span>
             </div>

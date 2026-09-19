@@ -1,28 +1,34 @@
-/* VoiceGuard Modern SaaS Dark Theme Design System */
+/* VoiceGuard Premium Glassmorphism Design System */
 :root {
-  --bg-main: #0a0e17;
-  --bg-card: linear-gradient(180deg, #131b2e 0%, #0d1527 100%);
-  --bg-card-hover: linear-gradient(180deg, #17223b 0%, #101a2f 100%);
-  --bg-inner: #0b1120;
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-subtle-hover: rgba(6, 182, 212, 0.3);
-  --border-accent: #0284c7;
+  --bg-main: #070b14;
+  --bg-glass: rgba(13, 21, 38, 0.58);
+  --bg-glass-elevated: rgba(15, 24, 46, 0.72);
+  --bg-glass-inner: rgba(9, 14, 27, 0.55);
+  
+  --border-glass: rgba(255, 255, 255, 0.08);
+  --border-glass-top: rgba(255, 255, 255, 0.18);
+  --border-glass-hover: rgba(6, 182, 212, 0.35);
+  
+  /* Accent Colors */
   --accent-primary: #06b6d4;
-  --accent-hover: #0891b2;
-  --accent-glow: rgba(6, 182, 212, 0.16);
+  --accent-secondary: #8b5cf6;
+  --accent-glow: rgba(6, 182, 212, 0.18);
+  --accent-secondary-glow: rgba(139, 92, 246, 0.15);
   
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --text-dim: #64748b;
   
-  /* Verdict Colors */
+  /* High-Contrast Verdict Colors */
   --danger-red: #ef4444;
-  --danger-bg: rgba(239, 68, 68, 0.1);
-  --danger-border: rgba(239, 68, 68, 0.3);
+  --danger-bg: rgba(239, 68, 68, 0.15);
+  --danger-border: rgba(239, 68, 68, 0.48);
+  --danger-glow: rgba(239, 68, 68, 0.35);
   
   --safe-green: #10b981;
-  --safe-bg: rgba(16, 185, 129, 0.1);
-  --safe-border: rgba(16, 185, 129, 0.3);
+  --safe-bg: rgba(16, 185, 129, 0.15);
+  --safe-border: rgba(16, 185, 129, 0.48);
+  --safe-glow: rgba(16, 185, 129, 0.35);
 
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.5;
@@ -42,101 +48,122 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  /* Ambient Multi-Point Gradient Mesh for Frosted Glass Depth */
   background-image: 
-    radial-gradient(at 0% 0%, rgba(6, 182, 212, 0.08) 0px, transparent 45%),
-    radial-gradient(at 100% 100%, rgba(2, 132, 199, 0.06) 0px, transparent 45%),
-    radial-gradient(at 50% 30%, rgba(15, 23, 42, 0.5) 0px, transparent 70%);
+    radial-gradient(ellipse 700px 520px at 12% 12%, rgba(6, 182, 212, 0.13) 0%, transparent 68%),
+    radial-gradient(ellipse 650px 520px at 88% 85%, rgba(139, 92, 246, 0.12) 0%, transparent 68%),
+    radial-gradient(ellipse 550px 420px at 72% 22%, rgba(168, 85, 247, 0.08) 0%, transparent 62%),
+    radial-gradient(ellipse at 50% 50%, rgba(11, 17, 34, 0.8) 0%, #060911 100%);
+  background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Base Card with Depth & Subtle Top Border Highlight */
+/* Frosted Glass Card with Soft Edge Definition & Depth */
 .vg-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-top-color: rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-glass);
+  border-top: 1px solid var(--border-glass-top);
+  border-radius: 16px;
   padding: 24px;
   box-shadow: 
-    0 1px 2px rgba(0, 0, 0, 0.25),
-    0 10px 28px -4px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    0 4px 6px -1px rgba(0, 0, 0, 0.25),
+    0 16px 36px -4px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .vg-card:hover {
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 
+    0 6px 12px -1px rgba(0, 0, 0, 0.3),
+    0 20px 44px -4px rgba(0, 0, 0, 0.52),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
 }
 
-/* Inner Nested Card */
+/* Secondary Inner Nested Glass Surface */
 .vg-inner-card {
-  background: var(--bg-inner);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--bg-glass-inner);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 10px;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
-/* Interactive Card with Smooth Lift & Glow */
+/* Interactive Glass Card with Smooth Lift & Cyan Glow */
 .interactive-card {
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background 180ms ease;
   cursor: pointer;
 }
 
 .interactive-card:hover {
   transform: translateY(-2px);
-  border-color: var(--border-subtle-hover);
+  border-color: var(--border-glass-hover) !important;
   box-shadow: 
-    0 12px 24px -6px rgba(0, 0, 0, 0.5),
-    0 0 20px rgba(6, 182, 212, 0.12);
+    0 14px 28px -6px rgba(0, 0, 0, 0.55),
+    0 0 24px rgba(6, 182, 212, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
 }
 
 .interactive-card:active {
   transform: translateY(0);
 }
 
-/* Drop Zone */
+/* Frosted Drop Zone */
 .dropzone {
-  border: 2px dashed #203050;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.7) 0%, rgba(11, 17, 32, 0.8) 100%);
-  border-radius: 12px;
+  border: 2px dashed rgba(56, 189, 248, 0.28);
+  background: rgba(13, 21, 38, 0.45);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 14px;
   padding: 40px 20px;
   text-align: center;
   cursor: pointer;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.25);
   transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
 }
 
 .dropzone:hover, .dropzone.active {
   border-color: var(--accent-primary);
-  background-color: rgba(6, 182, 212, 0.04);
+  background-color: rgba(6, 182, 212, 0.06);
   transform: translateY(-1px);
-  box-shadow: 0 0 24px var(--accent-glow);
+  box-shadow: 
+    0 0 28px rgba(6, 182, 212, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-/* Primary Button with Depth */
+/* Primary Action Button with Gradient Depth & Glass Top Highlight */
 .btn-primary {
-  background: linear-gradient(135deg, #06b6d4 0%, #0284c7 100%);
+  background: linear-gradient(135deg, #06b6d4 0%, #0284c7 55%, #6366f1 100%);
   color: #ffffff;
   font-weight: 600;
   padding: 12px 24px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-top-color: rgba(255, 255, 255, 0.35);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.2),
-    0 4px 14px rgba(6, 182, 212, 0.3);
+    0 2px 4px rgba(0, 0, 0, 0.25),
+    0 6px 18px rgba(6, 182, 212, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
   transition: transform 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
 }
 
 .btn-primary:hover:not(:disabled) {
-  opacity: 0.95;
+  opacity: 0.96;
   transform: translateY(-1px);
   box-shadow: 
-    0 4px 8px rgba(0, 0, 0, 0.25),
-    0 6px 20px rgba(6, 182, 212, 0.45);
+    0 4px 8px rgba(0, 0, 0, 0.3),
+    0 8px 24px rgba(6, 182, 212, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32);
 }
 
 .btn-primary:active:not(:disabled) {
@@ -150,7 +177,7 @@ body {
   box-shadow: none;
 }
 
-/* Smooth Result Fade + Scale In Animation */
+/* Smooth Result Fade + Scale In with Enhanced Foreground Depth */
 @keyframes resultAppear {
   0% {
     opacity: 0;
@@ -163,6 +190,14 @@ body {
 }
 
 .result-appear {
+  background: var(--bg-glass-elevated) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.24) !important;
+  box-shadow: 
+    0 20px 50px -10px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
   animation: resultAppear 360ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -170,15 +205,15 @@ body {
 @keyframes live-pulse {
   0% {
     box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.45);
-    border-color: rgba(6, 182, 212, 0.8);
+    border-color: rgba(6, 182, 212, 0.85);
   }
   50% {
     box-shadow: 0 0 0 8px rgba(6, 182, 212, 0);
-    border-color: rgba(56, 189, 248, 0.5);
+    border-color: rgba(56, 189, 248, 0.55);
   }
   100% {
     box-shadow: 0 0 0 0 rgba(6, 182, 212, 0);
-    border-color: rgba(6, 182, 212, 0.8);
+    border-color: rgba(6, 182, 212, 0.85);
   }
 }
 
@@ -200,12 +235,14 @@ body {
 /* Custom Meter Bar */
 .meter-container {
   height: 10px;
-  background-color: #0b1120;
+  background-color: rgba(9, 14, 26, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-radius: 5px;
   overflow: hidden;
   position: relative;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 .meter-fill {
@@ -214,41 +251,50 @@ body {
   transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Badges */
+/* High-Contrast Verdict Badges on Glass */
 .badge-danger {
   background: var(--danger-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: #fca5a5;
   border: 1px solid var(--danger-border);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
   padding: 5px 12px;
-  border-radius: 6px;
+  border-radius: 7px;
   font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
+  box-shadow: 0 0 16px var(--danger-glow);
 }
 
 .badge-safe {
   background: var(--safe-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: #6ee7b7;
   border: 1px solid var(--safe-border);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
   padding: 5px 12px;
-  border-radius: 6px;
+  border-radius: 7px;
   font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+  box-shadow: 0 0 16px var(--safe-glow);
 }
 
 /* Chips / Flags */
 .flag-chip {
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(239, 68, 68, 0.32);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
   color: #fca5a5;
   padding: 8px 12px;
   border-radius: 8px;

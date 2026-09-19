@@ -134,10 +134,10 @@ export default function FileUpload({ onAnalyze, isLoading, externalFile, onClear
           </p>
         </div>
       ) : (
-        <div style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', padding: '18px' }}>
+        <div style={{ background: 'rgba(11, 18, 34, 0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.08)', borderTop: '1px solid rgba(255, 255, 255, 0.16)', borderRadius: '12px', padding: '18px', boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ padding: '10px', borderRadius: '8px', background: 'rgba(6, 182, 212, 0.1)', color: '#06b6d4' }}>
+              <div style={{ padding: '10px', borderRadius: '8px', background: 'rgba(6, 182, 212, 0.12)', color: '#06b6d4' }}>
                 <FileAudio size={24} />
               </div>
               <div>
@@ -148,7 +148,7 @@ export default function FileUpload({ onAnalyze, isLoading, externalFile, onClear
             {!isLoading && (
               <button
                 onClick={handleClear}
-                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '6px', borderRadius: '6px' }}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '6px', borderRadius: '6px', transition: 'color 150ms ease' }}
                 title="Remove file"
               >
                 <X size={20} />
@@ -172,13 +172,14 @@ export default function FileUpload({ onAnalyze, isLoading, externalFile, onClear
               onClick={handleClear}
               disabled={isLoading}
               style={{
-                background: 'transparent',
-                border: '1px solid #334155',
-                color: '#94a3b8',
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: '#cbd5e1',
                 padding: '10px 18px',
                 borderRadius: '8px',
                 fontWeight: '500',
                 cursor: 'pointer',
+                transition: 'all 150ms ease'
               }}
             >
               Change file
