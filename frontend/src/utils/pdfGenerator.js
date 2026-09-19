@@ -24,8 +24,10 @@ export function generateForensicPdf(reportData) {
 
   const isFake = reportData.label === 'likely_ai_generated';
   const rawConf = reportData.confidence || 0;
-  const confidencePercent = Math.round((!isFake && rawConf < 0.5 ? 1 - rawConf : rawConf) * 100);
-  const modelPercent = Math.round((reportData.model_score || 0) * 100);
+  const confVal = !isFake && rawConf < 0.5 ? 1 - rawConf : rawConf;
+  const confidencePercent = (confVal * 100).toFixed(1);
+  const modelPercent = ((reportData.model_score || 0) * 100).toFixed(1);
+  const summaryData = reportData.summary || null;
   const flags = reportData.heuristic_flags || [];
   const metrics = reportData.metrics || {};
 
@@ -140,7 +142,7 @@ export function generateForensicPdf(reportData) {
     doc.setTextColor(21, 128, 61);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(16);
-    doc.text(`${Math.max(85, 100 - modelPercent)}% AUTHENTICITY CONFIDENCE`, 66, y + 12);
+    doc.text(`${confidencePercent}% AUTHENTICITY CONFIDENCE`, 66, y + 12);
 
     doc.setFontSize(8.5);
     doc.setFont('helvetica', 'normal');

@@ -312,17 +312,19 @@ export default function LiveView() {
   };
 
   const isFake = latestData?.label === 'likely_ai_generated';
-  const chunkScorePercent = latestData ? Math.round((latestData.chunk_score || 0) * 100) : 0;
+  const chunkScorePercent = latestData ? ((latestData.chunk_score || 0) * 100).toFixed(1) : '0.0';
   // Synthetic probability on the 0% (Human) to 100% (AI) spectrum bar
-  const syntheticPercent = latestData ? Math.round((latestData.rolling_avg_score || 0) * 100) : 0;
+  const rawSynth = latestData ? (latestData.rolling_avg_score || 0) : 0;
+  const syntheticPercent = (rawSynth * 100).toFixed(1);
   // Decision confidence in the determined verdict
-  const confidencePercent = latestData
+  const rawConf = latestData
     ? latestData.confidence !== undefined
-      ? Math.round(latestData.confidence * 100)
+      ? latestData.confidence
       : isFake
-      ? syntheticPercent
-      : 100 - syntheticPercent
+      ? rawSynth
+      : 1.0 - rawSynth
     : 0;
+  const confidencePercent = (rawConf * 100).toFixed(1);
   const flags = latestData?.heuristic_flags || [];
 
   return (
@@ -539,7 +541,7 @@ export default function LiveView() {
             <div
               className="spectrum-marker"
               style={{
-                left: latestData ? `${Math.max(4, Math.min(96, syntheticPercent))}%` : '50%'
+                left: latestData ? `${Math.max(4, Math.min(96, Number(syntheticPercent)))}%` : '50%'
               }}
             />
           </div>

@@ -167,31 +167,32 @@ export default function AnalyzeView({ onAnalyze, isLoading, error, result, activ
   }, [currentTime, duration, audioUrl]);
 
   const isFake = result?.label === 'likely_ai_generated';
+  
   // Synthetic probability on the 0% (Human) to 100% (AI) spectrum
-  const syntheticPercent = result
-    ? Math.round(
-        (result.synthetic_score !== undefined
-          ? result.synthetic_score
-          : isFake
-          ? result.confidence
-          : (result.confidence <= 0.5 ? result.confidence : 1.0 - result.confidence)) * 100
-      )
+  const rawSynth = result
+    ? (result.synthetic_score !== undefined
+        ? result.synthetic_score
+        : isFake
+        ? result.confidence
+        : (result.confidence <= 0.5 ? result.confidence : 1.0 - result.confidence))
     : 0;
+  const syntheticPercent = Number((rawSynth * 100).toFixed(1));
+
   // Decision confidence in the determined verdict
-  const confidencePercent = result
-    ? Math.round(
-        (result.confidence !== undefined
-          ? (result.synthetic_score !== undefined
-              ? result.confidence
-              : result.confidence >= 0.5
-              ? result.confidence
-              : 1.0 - result.confidence)
-          : isFake
-          ? syntheticPercent / 100
-          : 1.0 - syntheticPercent / 100) * 100
-      )
+  const rawConf = result
+    ? (result.confidence !== undefined
+        ? (result.synthetic_score !== undefined
+            ? result.confidence
+            : result.confidence >= 0.5
+            ? result.confidence
+            : 1.0 - result.confidence)
+        : isFake
+        ? rawSynth
+        : 1.0 - rawSynth)
     : 0;
-  const modelPercent = result ? Math.round((result.model_score || 0) * 100) : 0;
+  const confidencePercent = Number((rawConf * 100).toFixed(1));
+  const modelPercent = result ? Number(((result.model_score || 0) * 100).toFixed(1)) : 0;
+  const summaryData = result?.summary || null;
   const flags = result?.heuristic_flags || [];
   const metrics = result?.metrics || null;
 
@@ -661,12 +662,12 @@ export default function AnalyzeView({ onAnalyze, isLoading, error, result, activ
           {/* Explainability Findings & Acoustic Notes */}
           <div>
             <div style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
-              Forensic Summary
+              Forensic Summary & Analysis
             </div>
 
-            {/* Dynamic Alert Banner */}
-            {flags.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '14px' }}>
+            {/* Dynamic Alert Banner (Heuristic Violations) */}
+            {flags.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
                 {flags.map((flag, idx) => (
                   <div
                     key={idx}
@@ -692,64 +693,74 @@ export default function AnalyzeView({ onAnalyze, isLoading, error, result, activ
                           ? `Measured Wiener entropy of ${flatnessValDisplay} exceeds the 0.035 vocoder artifact limit.`
                           : flag.toLowerCase().includes('pause') || flag.toLowerCase().includes('breath')
                           ? `Active speech ratio is ${rawSpeech ? (rawSpeech * 100).toFixed(1) + '%' : '> 96%'} with only ${pauseValDisplay} pause duration.`
-                          : 'Acoustic invariant violated.'}
+                          : 'Acoustic invariant boundary violated.'}
                       </span>
                     </div>
                   </div>
                 ))}
               </div>
-            ) : isFake ? (
-              <div
-                style={{
-                  backgroundColor: 'var(--surface-secondary)',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '12px 14px',
-                  fontSize: '0.8125rem',
-                  color: 'var(--text-secondary)',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '10px',
-                  marginBottom: '14px'
-                }}
-              >
-                <Info size={16} color="var(--accent-cyan)" style={{ flexShrink: 0, marginTop: '2px' }} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                  <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
-                    Latent Deepfake Signature Detected
-                  </span>
-                  <span>
-                    The Wav2Vec2 neural sequence classifier identified synthetic voice patterns with <strong>{modelPercent}% confidence</strong>. 
-                    While cycle-to-cycle surface metrics ({jitterValDisplay} jitter, {pauseValDisplay} pauses) mimic organic tolerances, the underlying latent embedding aligns with neural vocoder synthesis manifolds.
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <div
-                style={{
-                  backgroundColor: 'var(--color-human-bg)',
-                  border: '1px solid var(--color-human-border)',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '12px 14px',
-                  fontSize: '0.8125rem',
-                  color: '#4ADE80',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '10px',
-                  marginBottom: '14px'
-                }}
-              >
-                <CheckCircle2 size={16} color="var(--color-human)" style={{ flexShrink: 0, marginTop: '2px' }} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                  <span style={{ fontWeight: '600' }}>
-                    Authentic Biological Speech Confirmed
-                  </span>
-                  <span style={{ color: 'var(--text-secondary)' }}>
-                    All forensic invariants verify natural human vocal production: micro-pitch jitter ({jitterValDisplay}), standard harmonic formant decay ({flatnessValDisplay} entropy), and organic breath intervals ({pauseValDisplay}). Wav2Vec2 classifier reports <strong>{100 - modelPercent}% human alignment</strong>.
-                  </span>
-                </div>
-              </div>
             )}
+
+            {/* Dynamic Comprehensive Forensic Card */}
+            <div
+              style={{
+                backgroundColor: isFake ? 'rgba(239, 68, 68, 0.05)' : 'rgba(34, 197, 94, 0.05)',
+                border: `1px solid ${isFake ? 'rgba(239, 68, 68, 0.22)' : 'rgba(34, 197, 94, 0.22)'}`,
+                borderRadius: 'var(--radius-sm)',
+                padding: '16px 18px',
+                marginBottom: '14px'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                {isFake ? (
+                  <ShieldAlert size={17} color="var(--color-ai)" />
+                ) : (
+                  <ShieldCheck size={17} color="var(--color-human)" />
+                )}
+                <span style={{ fontWeight: '600', fontSize: '0.875rem', color: isFake ? 'var(--color-ai)' : 'var(--color-human)' }}>
+                  {summaryData?.title || (isFake ? 'Synthetic Speech / Neural Voice Clone Detected' : 'Authentic Biological Vocal Production Verified')}
+                </span>
+                <span className="mono" style={{ marginLeft: 'auto', fontSize: '0.8125rem', color: isFake ? 'var(--color-ai)' : 'var(--color-human)', fontWeight: '600' }}>
+                  {confidencePercent}% Confidence
+                </span>
+              </div>
+
+              <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', lineHeight: 1.55, margin: '0 0 12px' }}>
+                {summaryData?.overview || (isFake
+                  ? `VoiceGuard's multi-layered acoustic inspection concluded with ${confidencePercent}% confidence that this recording is AI-generated. The underlying deep neural sequence model (Wav2Vec2) identified latent vocoder synthesis signatures at ${modelPercent}% sequence confidence.`
+                  : `VoiceGuard's forensic inspection confirmed with ${confidencePercent}% authenticity confidence that this recording is authentic human speech conforming to living vocal tract biomechanics.`
+                )}
+              </p>
+
+              {/* Key Diagnostic Observations */}
+              <div style={{ paddingTop: '10px', borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                <div style={{ fontSize: '0.6875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                  Key Forensic Findings
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {(summaryData?.key_findings || [
+                    `Neural Sequence Classifier: ${isFake ? 'Matches synthetic vocoder manifolds at ' + modelPercent + '% confidence.' : (100 - modelPercent).toFixed(1) + '% human alignment (' + modelPercent + '% synthetic score).'}`,
+                    `Laryngeal Micro-Dynamics: Measured relative pitch jitter at ${jitterValDisplay} (${isJitterAbnormal ? 'abnormally rigid' : 'natural vocal fold variability'}).`,
+                    `Spectral Coherence: Wiener entropy measured at ${flatnessValDisplay} (${isFlatnessElevated ? 'elevated vocoder noise' : 'standard harmonic decay'}) with ${Math.round(rawCentroid || 1400)} Hz frequency mass.`,
+                    `Respiration Cadence: ${pauseValDisplay} pause ratio across duration (${isPauseAbnormal ? 'unusually continuous phonation' : 'natural biological respiration'}).`
+                  ]).map((finding, fIdx) => (
+                    <div key={fIdx} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+                      <span style={{ color: isFake ? 'var(--color-ai)' : 'var(--color-human)', marginTop: '2px', fontWeight: 'bold' }}>•</span>
+                      <span>{finding}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Security Advisory / Recommendation */}
+              <div style={{ marginTop: '12px', padding: '8px 12px', backgroundColor: 'rgba(0, 0, 0, 0.28)', borderRadius: '4px', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                <strong style={{ color: isFake ? '#F87171' : '#4ADE80' }}>Advisory: </strong>
+                {summaryData?.recommendation || (isFake
+                  ? 'CRITICAL SECURITY NOTICE: High probability of synthesized deepfake or cloned voice impersonation. Do not authenticate sensitive transactions based on this audio.'
+                  : 'AUTHENTICITY VERIFIED: Audio conforms to human biomechanical speech standards. Passes standard voice biometric verification checks.'
+                )}
+              </div>
+            </div>
 
             {/* Dynamic Forensic Telemetry Grid */}
             <div

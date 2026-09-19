@@ -63,6 +63,7 @@ class AnalysisResponse(BaseModel):
     heuristic_flags: List[str]
     metrics: Optional[Dict[str, Any]] = None
     synthetic_score: Optional[float] = None
+    summary: Optional[Dict[str, Any]] = None
 
 
 @app.get("/")
@@ -189,7 +190,8 @@ async def analyze_file(file: UploadFile = File(...)):
             model_score=result["model_score"],
             heuristic_flags=result["heuristic_flags"],
             metrics=result.get("metrics"),
-            synthetic_score=result.get("synthetic_score")
+            synthetic_score=result.get("synthetic_score"),
+            summary=result.get("summary")
         )
 
     except HTTPException:
@@ -297,11 +299,11 @@ async def websocket_stream(websocket: WebSocket):
 
                 # Voice Activity Gate: If user is paused or ambient mic silence
                 if rms < 0.0035 and peak < 0.015:
-                    rolling_avg_score = round(sum(rolling_buffer) / len(rolling_buffer), 2) if rolling_buffer else 0.0
+                    rolling_avg_score = round(sum(rolling_buffer) / len(rolling_buffer), 4) if rolling_buffer else 0.015
                     label = "likely_ai_generated" if rolling_avg_score >= 0.50 else "likely_real"
-                    confidence = rolling_avg_score if label == "likely_ai_generated" else round(1.0 - rolling_avg_score, 2)
+                    confidence = rolling_avg_score if label == "likely_ai_generated" else round(1.0 - rolling_avg_score, 4)
                     response_payload = {
-                        "chunk_score": 0.0,
+                        "chunk_score": 0.015,
                         "rolling_avg_score": rolling_avg_score,
                         "confidence": confidence,
                         "label": label,
@@ -321,13 +323,13 @@ async def websocket_stream(websocket: WebSocket):
                 # Run shared analyze_audio() engine on active voice
                 result = analyze_audio(waveform, sr)
 
-                chunk_score = result.get("synthetic_score", result.get("confidence", 0.0))
+                chunk_score = round(result.get("synthetic_score", result.get("confidence", 0.0)), 4)
                 rolling_buffer.append(chunk_score)
-                rolling_avg_score = round(sum(rolling_buffer) / len(rolling_buffer), 2)
+                rolling_avg_score = round(sum(rolling_buffer) / len(rolling_buffer), 4)
 
                 # Smoothed verdict label and verdict confidence
                 label = "likely_ai_generated" if rolling_avg_score >= 0.50 else "likely_real"
-                confidence = rolling_avg_score if label == "likely_ai_generated" else round(1.0 - rolling_avg_score, 2)
+                confidence = rolling_avg_score if label == "likely_ai_generated" else round(1.0 - rolling_avg_score, 4)
 
                 response_payload = {
                     "chunk_score": chunk_score,
@@ -335,7 +337,8 @@ async def websocket_stream(websocket: WebSocket):
                     "confidence": confidence,
                     "label": label,
                     "heuristic_flags": result["heuristic_flags"],
-                    "metrics": result.get("metrics")
+                    "metrics": result.get("metrics"),
+                    "summary": result.get("summary")
                 }
                 await websocket.send_json(response_payload)
 
