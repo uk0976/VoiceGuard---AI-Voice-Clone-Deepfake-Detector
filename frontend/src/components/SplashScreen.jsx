@@ -73,18 +73,18 @@ export default function SplashScreen({ onComplete }) {
         {/* Logo Container with Subtle Glow */}
         <div
           style={{
-            width: '100px',
-            height: '100px',
-            borderRadius: '24px',
-            backgroundColor: 'rgba(13, 17, 23, 0.8)',
-            border: '1px solid rgba(34, 167, 214, 0.3)',
-            boxShadow: '0 0 35px rgba(34, 167, 214, 0.2), inset 0 0 15px rgba(34, 167, 214, 0.05)',
+            width: '110px',
+            height: '110px',
+            borderRadius: '26px',
+            backgroundColor: '#000000',
+            border: '1.5px solid rgba(34, 167, 214, 0.5)',
+            boxShadow: '0 0 45px rgba(34, 167, 214, 0.35), inset 0 0 20px rgba(34, 167, 214, 0.12)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             marginBottom: '22px',
             overflow: 'hidden',
-            padding: '8px'
+            padding: 0
           }}
         >
           <img
@@ -93,7 +93,8 @@ export default function SplashScreen({ onComplete }) {
             style={{
               width: '100%',
               height: '100%',
-              objectFit: 'contain'
+              objectFit: 'cover',
+              display: 'block'
             }}
           />
         </div>

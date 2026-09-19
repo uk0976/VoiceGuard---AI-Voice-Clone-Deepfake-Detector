@@ -79,23 +79,24 @@ export default function Sidebar({ currentView, setCurrentView }) {
       >
         <div
           style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: '8px',
-            backgroundColor: 'rgba(13, 17, 23, 0.9)',
-            border: '1px solid var(--border-strong)',
+            width: '34px',
+            height: '34px',
+            borderRadius: '9px',
+            backgroundColor: '#000000',
+            border: '1px solid rgba(34, 167, 214, 0.4)',
+            boxShadow: '0 0 10px rgba(34, 167, 214, 0.25)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             overflow: 'hidden',
-            padding: '2px',
+            padding: 0,
             flexShrink: 0
           }}
         >
           <img
             src="/logo.png"
             alt="VoiceGuard Logo"
-            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           />
         </div>
         <div>
