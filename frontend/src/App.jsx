@@ -18,7 +18,58 @@ export default function App() {
   const [errorMessage, setErrorMessage] = useState(null);
   const [selectedClipId, setSelectedClipId] = useState(null);
   const [activeFile, setActiveFile] = useState(null);
+  const [reports, setReports] = useState(() => {
+    try {
+      const stored = localStorage.getItem('voiceguard_reports');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
   const requestIdRef = useRef(0);
+
+  const saveReport = (newReport) => {
+    setReports((prev) => {
+      // De-duplicate if same file analyzed within 10 seconds
+      const existsIdx = prev.findIndex(
+        r => r.filename === newReport.filename && Math.abs(new Date(r.timestamp) - new Date(newReport.timestamp)) < 10000
+      );
+      let updated;
+      if (existsIdx >= 0) {
+        updated = [...prev];
+        updated[existsIdx] = newReport;
+      } else {
+        updated = [newReport, ...prev];
+      }
+      try {
+        localStorage.setItem('voiceguard_reports', JSON.stringify(updated));
+      } catch (e) {
+        console.warn('LocalStorage error:', e);
+      }
+      return updated;
+    });
+  };
+
+  const deleteReport = (id) => {
+    setReports((prev) => {
+      const updated = prev.filter(r => r.id !== id);
+      try {
+        localStorage.setItem('voiceguard_reports', JSON.stringify(updated));
+      } catch (e) {
+        console.warn('LocalStorage error:', e);
+      }
+      return updated;
+    });
+  };
+
+  const clearAllReports = () => {
+    setReports([]);
+    try {
+      localStorage.removeItem('voiceguard_reports');
+    } catch (e) {
+      console.warn('LocalStorage error:', e);
+    }
+  };
 
   const handleAnalyzeFile = async (file, clipMeta = null) => {
     const thisRequestId = ++requestIdRef.current;
@@ -40,6 +91,22 @@ export default function App() {
       const result = await analyzeAudioFile(file, file.name);
       if (thisRequestId === requestIdRef.current) {
         setAnalysisResult(result);
+
+        // Auto-register and persist genuine forensic report
+        const repId = `REP-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`;
+        const reportEntry = {
+          id: repId,
+          filename: file.name || 'voice_recording.wav',
+          timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC',
+          duration: clipMeta?.duration || (file.duration ? `${file.duration}s` : '--'),
+          label: result.label,
+          confidence: result.confidence,
+          model_score: result.model_score,
+          heuristic_flags: result.heuristic_flags || [],
+          metrics: result.metrics || {},
+          status: 'Generated'
+        };
+        saveReport(reportEntry);
       }
     } catch (err) {
       if (thisRequestId === requestIdRef.current) {
@@ -94,6 +161,7 @@ export default function App() {
               result={analysisResult}
               activeFile={activeFile}
               onReset={handleReset}
+              onSaveReport={saveReport}
             />
           )}
 
@@ -112,11 +180,17 @@ export default function App() {
           {currentView === 'history' && (
             <HistoryView
               onNavigate={setCurrentView}
+              reports={reports}
             />
           )}
 
           {currentView === 'reports' && (
-            <ReportsView />
+            <ReportsView
+              reports={reports}
+              onDeleteReport={deleteReport}
+              onClearReports={clearAllReports}
+              onNavigate={setCurrentView}
+            />
           )}
 
           {currentView === 'how_it_works' && (

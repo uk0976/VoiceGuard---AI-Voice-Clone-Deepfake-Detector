@@ -13,10 +13,12 @@ import {
   CheckCircle2, 
   Activity, 
   Cpu, 
-  RotateCcw
+  RotateCcw,
+  Download
 } from 'lucide-react';
+import { downloadForensicPdf } from '../utils/pdfGenerator';
 
-export default function AnalyzeView({ onAnalyze, isLoading, error, result, activeFile, onReset }) {
+export default function AnalyzeView({ onAnalyze, isLoading, error, result, activeFile, onReset, onSaveReport }) {
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [audioUrl, setAudioUrl] = useState(null);
@@ -24,6 +26,7 @@ export default function AnalyzeView({ onAnalyze, isLoading, error, result, activ
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [fileWarning, setFileWarning] = useState(null);
+  const [pdfDownloaded, setPdfDownloaded] = useState(false);
 
   const fileInputRef = useRef(null);
   const audioRef = useRef(null);
@@ -216,6 +219,28 @@ export default function AnalyzeView({ onAnalyze, isLoading, error, result, activ
   const modelNote = isModelSynthetic
     ? `Deepfake latent match (${modelPercent}% synthetic confidence on Wav2Vec2 manifold)`
     : `Authentic human speech manifold alignment (${100 - modelPercent}% human score);`;
+
+  const handleDownloadPdf = () => {
+    if (!result) return;
+    const reportData = {
+      id: `REP-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`,
+      filename: selectedFile?.name || 'Inspected_Voice_Recording.wav',
+      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC',
+      duration: duration ? `${duration.toFixed(1)}s` : '--',
+      label: result.label,
+      confidence: result.confidence,
+      model_score: result.model_score,
+      heuristic_flags: result.heuristic_flags,
+      metrics: result.metrics,
+      status: 'Generated'
+    };
+    downloadForensicPdf(reportData);
+    if (onSaveReport) {
+      onSaveReport(reportData);
+    }
+    setPdfDownloaded(true);
+    setTimeout(() => setPdfDownloaded(false), 3000);
+  };
 
   return (
     <div>
@@ -453,8 +478,26 @@ export default function AnalyzeView({ onAnalyze, isLoading, error, result, activ
                 {selectedFile?.name || 'Inspected Audio Signal'}
               </div>
             </div>
-            <div className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Duration: {duration ? `${duration.toFixed(1)}s` : '--'} · 16 kHz Mono
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                Duration: {duration ? `${duration.toFixed(1)}s` : '--'} · 16 kHz Mono
+              </div>
+              <button
+                onClick={handleDownloadPdf}
+                className="btn-secondary"
+                style={{
+                  fontSize: '0.75rem',
+                  padding: '5px 12px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  borderColor: pdfDownloaded ? 'var(--color-human)' : 'var(--border-subtle)',
+                  color: pdfDownloaded ? 'var(--color-human)' : 'var(--text-primary)'
+                }}
+                title="Download certified forensic PDF report"
+              >
+                <Download size={13} /> {pdfDownloaded ? 'Report Exported ✓' : 'Download PDF Report'}
+              </button>
             </div>
           </div>
 
