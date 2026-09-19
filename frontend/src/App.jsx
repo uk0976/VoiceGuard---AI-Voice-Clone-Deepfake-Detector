@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Shield, Sparkles, AudioWaveform, Cpu, Activity, Radio, CheckCircle, RefreshCw } from 'lucide-react';
 import FileUpload from './components/FileUpload';
 import ResultsPanel from './components/ResultsPanel';
@@ -13,11 +13,15 @@ export default function App() {
   const [selectedClipId, setSelectedClipId] = useState(null);
   const [activeFile, setActiveFile] = useState(null);
   const [activeTab, setActiveTab] = useState('upload'); // 'upload' | 'stream'
+  const requestIdRef = useRef(0);
 
   const handleAnalyzeFile = async (file, clipMeta = null) => {
+    const thisRequestId = ++requestIdRef.current;
     setActiveFile(file);
     setIsLoading(true);
     setErrorMessage(null);
+    setAnalysisResult(null);
+
     if (clipMeta) {
       setSelectedClipId(clipMeta.id);
     } else {
@@ -26,12 +30,18 @@ export default function App() {
 
     try {
       const result = await analyzeAudioFile(file, file.name);
-      setAnalysisResult(result);
+      if (thisRequestId === requestIdRef.current) {
+        setAnalysisResult(result);
+      }
     } catch (err) {
-      console.error('Analysis error:', err);
-      setErrorMessage(err.message || 'An error occurred while analyzing the audio file.');
+      if (thisRequestId === requestIdRef.current) {
+        console.error('Analysis error:', err);
+        setErrorMessage(err.message || 'An error occurred while analyzing the audio file.');
+      }
     } finally {
-      setIsLoading(false);
+      if (thisRequestId === requestIdRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 

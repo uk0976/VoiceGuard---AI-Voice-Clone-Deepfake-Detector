@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Play, Pause, CheckCircle2, AlertOctagon, Sparkles, AudioWaveform, Loader2 } from 'lucide-react';
 
 export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId }) {
   const [playingId, setPlayingId] = useState(null);
   const [audioElements, setAudioElements] = useState({});
   const [loadingClipId, setLoadingClipId] = useState(null);
+  const inFlightRef = useRef(false);
 
   const realClips = [
     {
@@ -97,7 +98,8 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
   };
 
   const handleTest = async (clip) => {
-    if (isLoading) return;
+    if (isLoading || inFlightRef.current) return;
+    inFlightRef.current = true;
     setLoadingClipId(clip.id);
 
     try {
@@ -118,6 +120,7 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
     } catch (err) {
       console.error('Failed to load demo clip for analysis:', err);
     } finally {
+      inFlightRef.current = false;
       setLoadingClipId(null);
     }
   };
