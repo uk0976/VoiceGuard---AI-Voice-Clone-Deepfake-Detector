@@ -10,7 +10,8 @@ from typing import Dict, Any, List
 import soundfile as sf
 import librosa
 import numpy as np
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from collections import deque
+from fastapi import FastAPI, UploadFile, File, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -174,6 +175,120 @@ async def analyze_file(file: UploadFile = File(...)):
             status_code=500,
             detail=f"An error occurred while processing the audio file: {str(e)}"
         )
+
+
+def decode_audio_chunk(data: bytes, default_sr: int = 16000) -> tuple[np.ndarray, int]:
+    """
+    Decodes raw binary audio chunks (WAV, PCM16, or container formats) sent over WebSocket.
+    """
+    # 1. Check if standard WAV / container header
+    if data.startswith(b"RIFF") or len(data) > 44:
+        try:
+            with io.BytesIO(data) as bio:
+                waveform, sr = sf.read(bio)
+                return np.asarray(waveform, dtype=np.float32), sr
+        except Exception:
+            pass
+
+    # 2. Check if raw PCM16 little-endian stream
+    try:
+        int16_arr = np.frombuffer(data, dtype=np.int16)
+        if len(int16_arr) > 100:
+            float32_arr = int16_arr.astype(np.float32) / 32768.0
+            return float32_arr, default_sr
+    except Exception:
+        pass
+
+    # 3. Fallback to librosa
+    try:
+        with io.BytesIO(data) as bio:
+            waveform, sr = librosa.load(bio, sr=default_sr, mono=False)
+            return np.asarray(waveform, dtype=np.float32), sr
+    except Exception as e:
+        raise ValueError(f"Could not decode audio chunk: {e}")
+
+
+@app.websocket("/ws/stream")
+async def websocket_stream(websocket: WebSocket):
+    """
+    WS /ws/stream
+    Accepts binary audio chunks (PCM16 or WAV blob) every ~1.5-2 seconds.
+    Computes chunk score and smoothed rolling average score across last ~5 chunks.
+    Contract:
+    {
+      "chunk_score": float,
+      "rolling_avg_score": float,
+      "label": "likely_ai_generated" | "likely_real",
+      "heuristic_flags": list[str]
+    }
+    """
+    await websocket.accept()
+    client_id = f"{websocket.client.host}:{websocket.client.port}" if websocket.client else "unknown"
+    logger.info(f"WebSocket client connected to /ws/stream: {client_id}")
+
+    # Rolling buffer of last ~5 chunks per connection to smooth out noise
+    rolling_buffer: deque = deque(maxlen=5)
+
+    try:
+        while True:
+            message = await websocket.receive()
+            msg_type = message.get("type")
+
+            if msg_type == "websocket.disconnect":
+                break
+
+            data = message.get("bytes")
+
+            # Handle text messages (ping/keepalive/base64)
+            if not data and "text" in message:
+                text_content = message["text"]
+                if text_content.strip() == "ping":
+                    await websocket.send_text("pong")
+                    continue
+                try:
+                    import base64
+                    data = base64.b64decode(text_content)
+                except Exception:
+                    continue
+
+            if not data or len(data) < 200:
+                continue
+
+            try:
+                waveform, sr = decode_audio_chunk(data)
+
+                # Skip empty or negligible audio (< 0.25s)
+                if len(waveform) < sr * 0.25:
+                    continue
+
+                # Run shared analyze_audio() engine
+                result = analyze_audio(waveform, sr)
+
+                chunk_score = result["confidence"]
+                rolling_buffer.append(chunk_score)
+                rolling_avg_score = round(sum(rolling_buffer) / len(rolling_buffer), 2)
+
+                # Smoothed verdict label
+                label = "likely_ai_generated" if rolling_avg_score >= 0.50 else "likely_real"
+
+                response_payload = {
+                    "chunk_score": chunk_score,
+                    "rolling_avg_score": rolling_avg_score,
+                    "label": label,
+                    "heuristic_flags": result["heuristic_flags"]
+                }
+                await websocket.send_json(response_payload)
+
+            except Exception as chunk_err:
+                logger.warning(f"Error processing stream chunk from {client_id}: {chunk_err}")
+                continue
+
+    except WebSocketDisconnect:
+        logger.info(f"WebSocket client {client_id} disconnected cleanly.")
+    except Exception as e:
+        logger.error(f"WebSocket session error for {client_id}: {e}", exc_info=True)
+    finally:
+        rolling_buffer.clear()
 
 
 if __name__ == "__main__":
