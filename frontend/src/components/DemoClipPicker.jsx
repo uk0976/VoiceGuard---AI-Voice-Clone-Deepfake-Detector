@@ -14,7 +14,7 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
       type: 'real',
       label: 'Real Voice 1',
       duration: '13.8s',
-      description: 'Conversational speech with biological pitch fluctuation and natural breath pauses.'
+      description: 'Natural speech with healthy pitch fluctuation and breath pauses.'
     },
     {
       id: 'real_2',
@@ -22,7 +22,7 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
       type: 'real',
       label: 'Real Voice 2',
       duration: '12.0s',
-      description: 'Authentic expressive cadence with variable harmonic formant decay.'
+      description: 'Expressive human cadence with rich acoustic harmonic decay.'
     },
     {
       id: 'real_3',
@@ -30,7 +30,7 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
       type: 'real',
       label: 'Real Voice 3',
       duration: '6.6s',
-      description: 'Short natural human utterance recorded under standard acoustic conditions.'
+      description: 'Short spoken phrase recorded under standard room acoustics.'
     }
   ];
 
@@ -41,7 +41,7 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
       type: 'fake',
       label: 'AI Voice 1',
       duration: '7.4s',
-      description: 'High-fidelity AI voice clone generated from paired human voice script.'
+      description: 'Neural voice clone generated from a cloned speaker model.'
     },
     {
       id: 'fake_2',
@@ -49,7 +49,7 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
       type: 'fake',
       label: 'AI Voice 2',
       duration: '8.7s',
-      description: 'Synthesized voice displaying unnaturally uniform pitch trajectories.'
+      description: 'Synthesized voice displaying unnaturally uniform pitch.'
     },
     {
       id: 'fake_3',
@@ -57,7 +57,7 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
       type: 'fake',
       label: 'AI Voice 3',
       duration: '2.4s',
-      description: 'Short synthetic sample generated with high vocoder phase stability.'
+      description: 'Short synthetic phrase with vocoder phase stability.'
     }
   ];
 
@@ -134,6 +134,7 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
     return (
       <div
         key={clip.id}
+        className="interactive-card"
         onClick={() => handleTest(clip)}
         style={{
           backgroundColor: isSelected
@@ -148,10 +149,6 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
           flexDirection: 'column',
           justifyContent: 'space-between',
           cursor: isLoading ? 'not-allowed' : 'pointer',
-          transition: 'all 0.2s ease',
-          boxShadow: isSelected
-            ? (isReal ? '0 0 16px rgba(16, 185, 129, 0.2)' : '0 0 16px rgba(239, 68, 68, 0.2)')
-            : 'none',
           position: 'relative'
         }}
       >
@@ -227,17 +224,17 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
           {isAnalyzingThis ? (
             <>
               <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />
-              Analyzing Clip...
+              Analyzing clip...
             </>
           ) : isSelected ? (
             <>
               <AudioWaveform size={14} />
-              Loaded in Analyzer
+              Loaded in analyzer
             </>
           ) : (
             <>
               <AudioWaveform size={14} />
-              Analyze This Clip
+              Analyze clip
             </>
           )}
         </button>
@@ -256,28 +253,19 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
       }}
     >
       {/* Header with Visual Secondary Cue */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', flexWrap: 'wrap', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(6, 182, 212, 0.1)', color: '#06b6d4' }}>
             <Sparkles size={18} />
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h3 style={{ fontSize: '1.02rem', fontWeight: '700', color: '#f8fafc' }}>
-                Or try a demo clip (Pre-Loaded Evaluation Benchmark)
-              </h3>
-              <span style={{ fontSize: '0.68rem', color: '#06b6d4', background: 'rgba(6, 182, 212, 0.12)', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(6, 182, 212, 0.25)', fontWeight: '600' }}>
-                1-CLICK EVALUATION
-              </span>
-            </div>
+            <h3 style={{ fontSize: '1.02rem', fontWeight: '700', color: '#f8fafc' }}>
+              Try a demo clip
+            </h3>
             <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '2px' }}>
-              Select any sample to load it directly into the analysis engine with live explanations.
+              Click any sample to evaluate it instantly with the detection pipeline.
             </p>
           </div>
-        </div>
-
-        <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-          Standardized 16kHz PCM WAV
         </div>
       </div>
 
@@ -294,11 +282,11 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', borderBottom: '1px solid #1e293b', paddingBottom: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', fontWeight: '700', color: '#34d399', background: 'rgba(16, 185, 129, 0.15)', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-                <CheckCircle2 size={13} /> AUTHENTIC HUMAN VOICES
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', fontWeight: '700', color: '#34d399', background: 'rgba(16, 185, 129, 0.15)', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                <CheckCircle2 size={13} /> REAL VOICES
               </span>
             </div>
-            <span style={{ fontSize: '0.72rem', color: '#64748b' }}>Expected: likely_real</span>
+            <span style={{ fontSize: '0.72rem', color: '#64748b' }}>Expected: Natural</span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -317,11 +305,11 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', borderBottom: '1px solid #1e293b', paddingBottom: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', fontWeight: '700', color: '#f87171', background: 'rgba(239, 68, 68, 0.15)', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-                <AlertOctagon size={13} /> AI-GENERATED CLONES
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', fontWeight: '700', color: '#f87171', background: 'rgba(239, 68, 68, 0.15)', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                <AlertOctagon size={13} /> AI VOICES
               </span>
             </div>
-            <span style={{ fontSize: '0.72rem', color: '#64748b' }}>Expected: likely_ai_generated</span>
+            <span style={{ fontSize: '0.72rem', color: '#64748b' }}>Expected: AI-Generated</span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>

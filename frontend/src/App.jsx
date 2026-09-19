@@ -57,8 +57,8 @@ export default function App() {
       {/* Top Navigation Bar */}
       <header
         style={{
-          borderBottom: '1px solid #1e293b',
-          backgroundColor: 'rgba(11, 15, 25, 0.92)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+          backgroundColor: 'rgba(10, 14, 23, 0.92)',
           backdropFilter: 'blur(12px)',
           position: 'sticky',
           top: 0,
@@ -68,62 +68,47 @@ export default function App() {
       >
         <div style={{ maxWidth: '1240px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {/* Logo & Brand */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div
               style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '10px',
+                width: '36px',
+                height: '36px',
+                borderRadius: '9px',
                 background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 0 20px rgba(6, 182, 212, 0.4)',
+                boxShadow: '0 2px 10px rgba(6, 182, 212, 0.35)',
                 color: '#ffffff'
               }}
             >
-              <Shield size={24} />
+              <AudioWaveform size={20} />
             </div>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h1 style={{ fontSize: '1.25rem', fontWeight: '800', letterSpacing: '-0.02em', color: '#f8fafc' }}>
-                  VoiceGuard
-                </h1>
-                <span
-                  style={{
-                    fontSize: '0.65rem',
-                    fontWeight: '700',
-                    color: '#06b6d4',
-                    background: 'rgba(6, 182, 212, 0.12)',
-                    border: '1px solid rgba(6, 182, 212, 0.3)',
-                    padding: '2px 8px',
-                    borderRadius: '9999px'
-                  }}
-                >
-                  DEEPFAKE DETECTION SUITE
-                </span>
-              </div>
-              <p style={{ fontSize: '0.75rem', color: '#94a3b8' }}>AI Voice Clone & Synthetic Audio Verification</p>
+              <h1 style={{ fontSize: '1.2rem', fontWeight: '700', letterSpacing: '-0.02em', color: '#f8fafc', lineHeight: 1.2 }}>
+                VoiceGuard
+              </h1>
+              <p style={{ fontSize: '0.74rem', color: '#64748b' }}>Audio authenticity detector</p>
             </div>
           </div>
 
           {/* System Status Indicators */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                background: '#0f172a',
-                border: '1px solid #1e293b',
+                background: '#0d1322',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
                 padding: '6px 12px',
                 borderRadius: '8px',
                 fontSize: '0.78rem',
                 color: '#cbd5e1'
               }}
             >
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block', boxShadow: '0 0 8px #10b981' }} />
-              <span>Wav2Vec2 V2 Model Online</span>
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block', boxShadow: '0 0 8px #10b981' }} />
+              <span>Model ready</span>
             </div>
 
             {analysisResult && (
@@ -131,7 +116,7 @@ export default function App() {
                 onClick={handleReset}
                 style={{
                   background: 'transparent',
-                  border: '1px solid #334155',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   color: '#94a3b8',
                   padding: '6px 12px',
                   borderRadius: '6px',
@@ -139,7 +124,8 @@ export default function App() {
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px'
+                  gap: '6px',
+                  transition: 'border-color 150ms ease, color 150ms ease'
                 }}
               >
                 <RefreshCw size={12} /> Reset
@@ -150,7 +136,7 @@ export default function App() {
               href="https://github.com/uk0976/VoiceGuard---AI-Voice-Clone-Deepfake-Detector"
               target="_blank"
               rel="noreferrer"
-              style={{ color: '#94a3b8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}
+              style={{ color: '#64748b', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', transition: 'color 150ms ease' }}
               title="GitHub Repository"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -166,42 +152,53 @@ export default function App() {
         <div style={{ maxWidth: '1240px', width: '100%' }}>
           {/* Header Hero Section */}
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '6px 14px',
-                borderRadius: '9999px',
-                background: 'rgba(6, 182, 212, 0.08)',
-                border: '1px solid rgba(6, 182, 212, 0.25)',
-                color: '#38bdf8',
-                fontSize: '0.8rem',
-                fontWeight: '600',
-                marginBottom: '14px'
-              }}
-            >
-              <Sparkles size={14} />
-              Explainable AI Defense Engine (Audio Classification + Signal Processing)
-            </div>
-            <h2 style={{ fontSize: '2.25rem', fontWeight: '800', color: '#f8fafc', letterSpacing: '-0.025em', marginBottom: '10px' }}>
-              Verify Human Authenticity in Seconds
+            <h2 style={{ fontSize: '2.1rem', fontWeight: '800', color: '#f8fafc', letterSpacing: '-0.025em', marginBottom: '8px' }}>
+              Detect synthetic voices and AI clones
             </h2>
-            <p style={{ fontSize: '0.98rem', color: '#94a3b8', maxWidth: '680px', margin: '0 auto', lineHeight: '1.6' }}>
-              Detect realistic AI voice clones used in imposter fraud, CEO scam calls, and automated robocalls with instant confidence scores and transparent acoustic explanations.
+            <p style={{ fontSize: '0.95rem', color: '#94a3b8', maxWidth: '620px', margin: '0 auto', lineHeight: '1.5' }}>
+              Analyze recorded audio or stream live speech to check whether a voice is human or AI-generated.
             </p>
           </div>
 
-          {/* Mode Selector Tabs */}
+          {/* Mode Selector Tabs with Smooth Sliding Indicator */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '28px' }}>
-            <div style={{ background: '#0f172a', border: '1px solid #1e293b', padding: '5px', borderRadius: '12px', display: 'inline-flex', gap: '6px' }}>
+            <div
+              style={{
+                position: 'relative',
+                background: '#0c1220',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                padding: '4px',
+                borderRadius: '12px',
+                display: 'inline-flex',
+                boxShadow: 'inset 0 1px 3px rgba(0, 0, 0, 0.4)'
+              }}
+            >
+              {/* Sliding Indicator */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '4px',
+                  bottom: '4px',
+                  left: activeTab === 'upload' ? '4px' : 'calc(50% + 2px)',
+                  width: 'calc(50% - 6px)',
+                  background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 10px rgba(6, 182, 212, 0.35)',
+                  transition: 'left 240ms cubic-bezier(0.16, 1, 0.3, 1)',
+                  zIndex: 1,
+                  pointerEvents: 'none'
+                }}
+              />
+
               <button
                 onClick={() => setActiveTab('upload')}
                 style={{
-                  background: activeTab === 'upload' ? 'linear-gradient(135deg, #06b6d4, #0284c7)' : 'transparent',
+                  position: 'relative',
+                  zIndex: 2,
+                  background: 'transparent',
                   color: activeTab === 'upload' ? '#ffffff' : '#94a3b8',
                   border: 'none',
-                  padding: '9px 22px',
+                  padding: '9px 24px',
                   borderRadius: '8px',
                   fontWeight: '600',
                   fontSize: '0.85rem',
@@ -209,20 +206,21 @@ export default function App() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  transition: 'all 0.2s ease',
-                  boxShadow: activeTab === 'upload' ? '0 2px 12px rgba(6, 182, 212, 0.35)' : 'none'
+                  transition: 'color 180ms ease'
                 }}
               >
                 <AudioWaveform size={16} />
-                Mode A: File Upload
+                File Upload
               </button>
               <button
                 onClick={() => setActiveTab('stream')}
                 style={{
-                  background: activeTab === 'stream' ? 'linear-gradient(135deg, #06b6d4, #0284c7)' : 'transparent',
+                  position: 'relative',
+                  zIndex: 2,
+                  background: 'transparent',
                   color: activeTab === 'stream' ? '#ffffff' : '#94a3b8',
                   border: 'none',
-                  padding: '9px 22px',
+                  padding: '9px 24px',
                   borderRadius: '8px',
                   fontWeight: '600',
                   fontSize: '0.85rem',
@@ -230,12 +228,11 @@ export default function App() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  transition: 'all 0.2s ease',
-                  boxShadow: activeTab === 'stream' ? '0 2px 12px rgba(6, 182, 212, 0.35)' : 'none'
+                  transition: 'color 180ms ease'
                 }}
               >
                 <Radio size={16} />
-                Mode B: Real-Time Live Stream
+                Live Stream
               </button>
             </div>
           </div>
@@ -278,13 +275,13 @@ export default function App() {
             <LiveStream />
           )}
 
-          {/* Technical Architecture Specs for Judges */}
+          {/* Technical Specifications */}
           <div
             style={{
               marginTop: '28px',
-              padding: '16px 20px',
-              background: 'rgba(15, 23, 42, 0.6)',
-              border: '1px solid #1e293b',
+              padding: '14px 20px',
+              background: 'rgba(13, 20, 36, 0.5)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
               borderRadius: '10px',
               display: 'flex',
               alignItems: 'center',
@@ -296,24 +293,24 @@ export default function App() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <strong style={{ color: '#94a3b8' }}>Model Backbone:</strong>
-              <code style={{ background: '#1e293b', color: '#38bdf8', padding: '2px 6px', borderRadius: '4px' }}>MelodyMachine/Deepfake-audio-detection-V2</code>
+              <strong style={{ color: '#94a3b8' }}>Model:</strong>
+              <code style={{ background: '#0b1120', color: '#38bdf8', padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>Wav2Vec2 Deepfake-V2</code>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <strong style={{ color: '#94a3b8' }}>Signal Engine:</strong>
-              <span>Librosa Pyin F0 Jitter + Spectral Wiener Entropy + Energy Silence Split</span>
+              <strong style={{ color: '#94a3b8' }}>Heuristics:</strong>
+              <span>Pitch jitter · Spectral flatness · Pause cadence</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <strong style={{ color: '#94a3b8' }}>Audio Pipeline:</strong>
-              <span>16,000 Hz Mono 16-bit PCM Resampling</span>
+              <strong style={{ color: '#94a3b8' }}>Input:</strong>
+              <span>16 kHz Mono PCM</span>
             </div>
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer style={{ borderTop: '1px solid #1e293b', padding: '16px 24px', textAlign: 'center', fontSize: '0.8rem', color: '#64748b' }}>
-        VoiceGuard AI Voice Clone & Deepfake Detector · Built with FastAPI, PyTorch, Transformers, Librosa & React Vite
+      <footer style={{ borderTop: '1px solid rgba(255, 255, 255, 0.05)', padding: '16px 24px', textAlign: 'center', fontSize: '0.78rem', color: '#475569' }}>
+        VoiceGuard AI Voice Clone & Deepfake Detector · FastAPI + PyTorch + Transformers + React
       </footer>
     </div>
   );

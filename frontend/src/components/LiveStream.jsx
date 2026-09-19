@@ -300,18 +300,13 @@ export default function LiveStream() {
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))', gap: '24px', alignItems: 'start' }}>
       {/* Left Column: Live Mic Controls & Waveform */}
       <div className="vg-card">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#f8fafc' }}>
-              Real-Time Streaming Analysis
-            </h2>
-            <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '2px' }}>
-              Stream live microphone audio via WebSocket to monitor deepfake confidence in real time
-            </p>
-          </div>
-          <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#06b6d4', background: 'rgba(6,182,212,0.1)', padding: '4px 10px', borderRadius: '6px', border: '1px solid rgba(6,182,212,0.2)' }}>
-            Mode B
-          </span>
+        <div style={{ marginBottom: '18px' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#f8fafc' }}>
+            Live microphone
+          </h2>
+          <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '2px' }}>
+            Stream audio through your microphone to detect synthetic voices in real time
+          </p>
         </div>
 
         {/* Error Alert Banner */}
@@ -398,6 +393,7 @@ export default function LiveStream() {
 
         {/* Live Audio Visualizer Canvas */}
         <div
+          className={isListening ? 'live-listening-pulse' : ''}
           style={{
             background: '#090d16',
             border: isListening ? '1px solid #06b6d4' : '1px solid #1e293b',
@@ -407,14 +403,13 @@ export default function LiveStream() {
             marginBottom: '20px',
             position: 'relative',
             overflow: 'hidden',
-            boxShadow: isListening ? '0 0 20px rgba(6, 182, 212, 0.15)' : 'none',
             transition: 'all 0.3s ease'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: isListening ? '#38bdf8' : '#64748b' }}>
               <Radio size={14} className={isListening ? 'animate-pulse' : ''} />
-              <span>{isListening ? 'Microphone Active (Streaming ~1.5s Chunks)' : 'Microphone Inactive'}</span>
+              <span>{isListening ? 'Microphone active' : 'Microphone idle'}</span>
             </div>
             {isListening && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#94a3b8' }}>
@@ -449,7 +444,7 @@ export default function LiveStream() {
                   ? 'Requesting microphone permissions and connecting to server...'
                   : streamStatus === 'disconnected'
                   ? 'Stream disconnected. Click "Reconnect Live Stream" to resume.'
-                  : 'Click "Start Live Listening" below to initiate real-time mic inspection'}
+                  : 'Click "Start listening" below to begin live analysis'}
               </p>
             </div>
           )}
@@ -464,7 +459,7 @@ export default function LiveStream() {
               style={{ width: '100%', padding: '14px 24px', fontSize: '1rem', opacity: 0.8, cursor: 'wait' }}
             >
               <Loader2 size={20} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
-              Connecting to Live Stream...
+              Connecting microphone...
             </button>
           ) : !isListening ? (
             <button
@@ -473,7 +468,7 @@ export default function LiveStream() {
               style={{ width: '100%', padding: '14px 24px', fontSize: '1rem' }}
             >
               <Mic size={20} />
-              {streamStatus === 'disconnected' ? 'Reconnect Live Stream' : 'Start Live Listening'}
+              {streamStatus === 'disconnected' ? 'Reconnect stream' : 'Start listening'}
             </button>
           ) : (
             <button
@@ -496,13 +491,13 @@ export default function LiveStream() {
               }}
             >
               <MicOff size={20} />
-              Stop Listening
+              Stop listening
             </button>
           )}
         </div>
 
         <div style={{ marginTop: '16px', fontSize: '0.75rem', color: '#64748b', textAlign: 'center' }}>
-          Audio is processed locally in rolling ~1.5-second windows; nothing is stored or uploaded to external servers.
+          Audio is processed locally in rolling ~1.5-second windows; nothing is stored or uploaded.
         </div>
       </div>
 
@@ -511,7 +506,7 @@ export default function LiveStream() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #1e293b', paddingBottom: '18px', marginBottom: '20px' }}>
           <div>
             <span style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: '700' }}>
-              Real-Time Verdict
+              Live verdict
             </span>
             <div style={{ marginTop: '6px' }}>
               {streamStatus === 'connecting' ? (
@@ -522,26 +517,26 @@ export default function LiveStream() {
               ) : streamStatus === 'disconnected' ? (
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(245, 158, 11, 0.12)', color: '#fbbf24', padding: '6px 14px', borderRadius: '9999px', fontSize: '0.82rem', fontWeight: '600', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
                   <AlertTriangle size={16} />
-                  <span>STREAM DISCONNECTED</span>
+                  <span>DISCONNECTED</span>
                 </div>
               ) : isListening && !latestData ? (
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(6, 182, 212, 0.12)', color: '#38bdf8', padding: '6px 14px', borderRadius: '9999px', fontSize: '0.82rem', fontWeight: '600', border: '1px solid rgba(6, 182, 212, 0.3)' }}>
                   <Activity size={16} className="animate-pulse" />
-                  <span>BUFFERING FIRST CHUNK (~1.5s)</span>
+                  <span>BUFFERING AUDIO...</span>
                 </div>
               ) : !latestData ? (
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#1e293b', color: '#94a3b8', padding: '6px 14px', borderRadius: '9999px', fontSize: '0.82rem', fontWeight: '600' }}>
-                  AWAITING LIVE STREAM
+                  AWAITING AUDIO
                 </div>
               ) : isFake ? (
                 <div className="badge-danger">
-                  <ShieldAlert size={18} />
-                  <span>SUSPECTED AI VOICE CLONE</span>
+                  <ShieldAlert size={17} />
+                  <span>AI-Generated Voice</span>
                 </div>
               ) : (
                 <div className="badge-safe">
-                  <ShieldCheck size={18} />
-                  <span>AUTHENTIC HUMAN VOICE</span>
+                  <ShieldCheck size={17} />
+                  <span>Natural Human Voice</span>
                 </div>
               )}
             </div>
@@ -584,14 +579,14 @@ export default function LiveStream() {
 
             <div>
               <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '500' }}>
-                Rolling Avg Score
+                Rolling Confidence
               </div>
               <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#f1f5f9' }}>
                 {latestData
-                  ? (isFake ? 'AI Generated Stream' : 'Live Natural Speech')
+                  ? (isFake ? 'Synthetic voice detected' : 'Natural speech detected')
                   : isListening
-                  ? 'Buffering Window...'
-                  : '5-Chunk Window'}
+                  ? 'Analyzing stream...'
+                  : '5-chunk window'}
               </div>
             </div>
           </div>
@@ -601,8 +596,8 @@ export default function LiveStream() {
         <div style={{ marginBottom: '22px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', marginBottom: '6px', fontWeight: '500' }}>
             <span>0% Human</span>
-            <span style={{ color: '#06b6d4', fontWeight: '600' }}>50% Decision Line</span>
-            <span>100% Synthetic</span>
+            <span style={{ color: '#06b6d4', fontWeight: '600' }}>50% Threshold</span>
+            <span>100% AI</span>
           </div>
           <div className="meter-container">
             <div
@@ -623,20 +618,20 @@ export default function LiveStream() {
           <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '0.75rem', marginBottom: '4px' }}>
               <Activity size={14} color="#06b6d4" />
-              Latest Chunk Score
+              Latest Chunk
             </div>
             <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#f8fafc', fontFamily: "'JetBrains Mono', monospace" }}>
               {latestData ? `${chunkScorePercent}%` : '--'}
             </div>
             <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
-              Instant ~1.5s slice score
+              Recent 1.5s slice
             </div>
           </div>
 
           <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '10px', padding: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '0.75rem', marginBottom: '4px' }}>
               <Cpu size={14} color="#06b6d4" />
-              Rolling Smoother
+              Rolling Average
             </div>
             <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#f8fafc', fontFamily: "'JetBrains Mono', monospace" }}>
               {latestData ? `${rollingScorePercent}%` : '--'}
@@ -650,7 +645,7 @@ export default function LiveStream() {
         {/* Live Heuristic Flags */}
         <div>
           <h4 style={{ fontSize: '0.8rem', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>
-            Rolling Window Acoustic Flags ({flags.length})
+            Live Acoustic Checks ({flags.length})
           </h4>
 
           {flags.length > 0 ? (
@@ -667,10 +662,10 @@ export default function LiveStream() {
               <CheckCircle2 size={18} color={isListening ? '#06b6d4' : '#10b981'} style={{ flexShrink: 0 }} />
               <span>
                 {latestData
-                  ? 'No unnatural synthetic anomalies detected in live microphone speech.'
+                  ? 'No synthetic anomalies detected in live speech.'
                   : isListening
-                  ? 'Microphone active. Evaluating speech acoustics in rolling 1.5s windows.'
-                  : 'Start live listening to monitor incoming vocal tract physics in real time.'}
+                  ? 'Listening... Evaluating speech acoustics in 1.5s windows.'
+                  : 'Start listening to monitor voice physics in real time.'}
               </span>
             </div>
           )}

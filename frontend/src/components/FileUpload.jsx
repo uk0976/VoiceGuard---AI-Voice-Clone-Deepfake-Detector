@@ -95,16 +95,11 @@ export default function FileUpload({ onAnalyze, isLoading, externalFile, onClear
 
   return (
     <div className="vg-card" style={{ width: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-        <div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#f8fafc' }}>Audio File Analysis</h2>
-          <p style={{ fontSize: '0.875rem', color: '#94a3b8', marginTop: '2px' }}>
-            Upload a voice recording (.wav, .mp3, .m4a) to detect synthetic cloning
-          </p>
-        </div>
-        <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#06b6d4', background: 'rgba(6,182,212,0.1)', padding: '4px 10px', borderRadius: '6px', border: '1px solid rgba(6,182,212,0.2)' }}>
-          Mode A
-        </span>
+      <div style={{ marginBottom: '18px' }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#f8fafc' }}>Upload audio</h2>
+        <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '2px' }}>
+          Select a WAV, MP3, or M4A file to analyze for synthetic speech
+        </p>
       </div>
 
       <input
@@ -125,14 +120,14 @@ export default function FileUpload({ onAnalyze, isLoading, externalFile, onClear
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
         >
-          <div style={{ display: 'inline-flex', padding: '16px', borderRadius: '50%', background: 'rgba(6, 182, 212, 0.08)', marginBottom: '16px', color: '#06b6d4' }}>
-            <UploadCloud size={36} />
+          <div style={{ display: 'inline-flex', padding: '16px', borderRadius: '50%', background: 'rgba(6, 182, 212, 0.08)', marginBottom: '14px', color: '#06b6d4' }}>
+            <UploadCloud size={34} />
           </div>
-          <h3 style={{ fontSize: '1rem', fontWeight: '600', color: '#e2e8f0', marginBottom: '6px' }}>
-            Drag and drop your audio clip here
+          <h3 style={{ fontSize: '0.98rem', fontWeight: '600', color: '#e2e8f0', marginBottom: '6px' }}>
+            Drag and drop an audio file here
           </h3>
-          <p style={{ fontSize: '0.85rem', color: '#64748b' }}>
-            or <span style={{ color: '#06b6d4', textDecoration: 'underline', fontWeight: '500' }}>browse from your computer</span>
+          <p style={{ fontSize: '0.84rem', color: '#64748b' }}>
+            or <span style={{ color: '#06b6d4', textDecoration: 'underline', fontWeight: '500' }}>browse from your device</span>
           </p>
           <p style={{ fontSize: '0.75rem', color: '#475569', marginTop: '12px' }}>
             Supports WAV, MP3, M4A, OGG up to 25MB
@@ -186,7 +181,7 @@ export default function FileUpload({ onAnalyze, isLoading, externalFile, onClear
                 cursor: 'pointer',
               }}
             >
-              Change File
+              Change file
             </button>
             <button
               className="btn-primary"
@@ -196,12 +191,12 @@ export default function FileUpload({ onAnalyze, isLoading, externalFile, onClear
               {isLoading ? (
                 <>
                   <Loader2 size={18} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
-                  Analyzing Audio...
+                  Analyzing...
                 </>
               ) : (
                 <>
                   <Sparkles size={18} />
-                  Run Detection
+                  Analyze audio
                 </>
               )}
             </button>
