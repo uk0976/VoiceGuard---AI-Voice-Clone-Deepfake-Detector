@@ -13,7 +13,8 @@ export default function FileUpload({ onAnalyze, isLoading, externalFile, onClear
       if (audioUrl) {
         URL.revokeObjectURL(audioUrl);
       }
-      setAudioUrl(URL.createObjectURL(externalFile));
+      const isAudio = externalFile.type?.startsWith('audio/') || /\.(wav|mp3|m4a|ogg|flac|aac|wma)$/i.test(externalFile.name || '');
+      setAudioUrl(isAudio ? URL.createObjectURL(externalFile) : null);
     }
   }, [externalFile]);
 
@@ -33,7 +34,8 @@ export default function FileUpload({ onAnalyze, isLoading, externalFile, onClear
     if (audioUrl) {
       URL.revokeObjectURL(audioUrl);
     }
-    setAudioUrl(URL.createObjectURL(file));
+    const isAudio = file.type?.startsWith('audio/') || /\.(wav|mp3|m4a|ogg|flac|aac|wma)$/i.test(file.name || '');
+    setAudioUrl(isAudio ? URL.createObjectURL(file) : null);
   };
 
   const handleDrop = (e) => {
@@ -145,9 +147,13 @@ export default function FileUpload({ onAnalyze, isLoading, externalFile, onClear
             )}
           </div>
 
-          {audioUrl && (
+          {audioUrl ? (
             <div style={{ marginTop: '12px', marginBottom: '18px' }}>
               <audio controls src={audioUrl} style={{ width: '100%', height: '36px', borderRadius: '6px' }} />
+            </div>
+          ) : (
+            <div style={{ marginTop: '10px', marginBottom: '16px', padding: '8px 12px', background: 'rgba(239, 68, 68, 0.08)', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#f87171', fontSize: '0.78rem' }}>
+              Unrecognized audio file format. Server validation will verify file headers.
             </div>
           )}
 
