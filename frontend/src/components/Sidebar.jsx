@@ -1,0 +1,153 @@
+import React from 'react';
+import { 
+  Shield, 
+  AudioWaveform, 
+  FileAudio, 
+  Radio, 
+  History, 
+  FileText, 
+  BookOpen, 
+  Workflow, 
+  SlidersHorizontal,
+  ExternalLink
+} from 'lucide-react';
+
+export default function Sidebar({ currentView, setCurrentView }) {
+  const navSections = [
+    {
+      title: 'OVERVIEW',
+      items: [
+        { id: 'overview', label: 'Overview', icon: AudioWaveform },
+        { id: 'analyze', label: 'Analyze Audio', icon: FileAudio },
+        { id: 'live', label: 'Live Detection', icon: Radio },
+        { id: 'samples', label: 'Demo Samples', icon: SlidersHorizontal },
+      ]
+    },
+    {
+      title: 'INSIGHTS',
+      items: [
+        { id: 'history', label: 'Detection History', icon: History },
+        { id: 'reports', label: 'Forensic Reports', icon: FileText },
+      ]
+    },
+    {
+      title: 'RESOURCES',
+      items: [
+        { id: 'how_it_works', label: 'How It Works', icon: Workflow },
+        { id: 'docs', label: 'Documentation', icon: BookOpen },
+      ]
+    }
+  ];
+
+  return (
+    <aside
+      style={{
+        width: '236px',
+        backgroundColor: 'var(--surface-sidebar)',
+        borderRight: '1px solid var(--border-subtle)',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        position: 'sticky',
+        top: 0,
+        flexShrink: 0,
+        userSelect: 'none'
+      }}
+    >
+      {/* Brand Header */}
+      <div
+        style={{
+          padding: '18px 16px',
+          borderBottom: '1px solid var(--border-subtle)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px'
+        }}
+      >
+        <div
+          style={{
+            width: '28px',
+            height: '28px',
+            borderRadius: 'var(--radius-sm)',
+            backgroundColor: 'var(--surface-elevated)',
+            border: '1px solid var(--border-strong)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--accent-cyan)'
+          }}
+        >
+          <AudioWaveform size={16} />
+        </div>
+        <div>
+          <div style={{ fontSize: '0.9375rem', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+            VoiceGuard
+          </div>
+          <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
+            Audio Authenticity Platform
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation Sections */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 8px' }}>
+        {navSections.map((section, sIdx) => (
+          <div key={sIdx} style={{ marginBottom: '20px' }}>
+            <div
+              style={{
+                fontSize: '0.625rem',
+                fontWeight: '600',
+                color: 'var(--text-muted)',
+                letterSpacing: '0.08em',
+                padding: '0 10px 8px',
+                textTransform: 'uppercase'
+              }}
+            >
+              {section.title}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = currentView === item.id;
+
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setCurrentView(item.id)}
+                    className={`nav-item ${isActive ? 'active' : ''}`}
+                  >
+                    <Icon size={15} color={isActive ? 'var(--accent-cyan)' : 'var(--text-muted)'} />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* System Status Footer */}
+      <div
+        style={{
+          padding: '14px 16px',
+          borderTop: '1px solid var(--border-subtle)',
+          backgroundColor: 'var(--surface-primary)',
+          fontSize: '0.75rem'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--color-human)' }} />
+            <span style={{ fontWeight: '500', color: 'var(--text-secondary)' }}>Model ready</span>
+          </div>
+          <span className="mono" style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>v2.4.1</span>
+        </div>
+
+        <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
+          Wav2Vec2 Deepfake-V2
+        </div>
+      </div>
+    </aside>
+  );
+}

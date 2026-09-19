@@ -1,23 +1,23 @@
 import React, { useState, useRef } from 'react';
-import { UploadCloud, Radio } from 'lucide-react';
-import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import FileUpload from './components/FileUpload';
-import ResultsPanel from './components/ResultsPanel';
-import DemoClipPicker from './components/DemoClipPicker';
-import LiveStream from './components/LiveStream';
-import HowItWorks from './components/HowItWorks';
-import TechnicalSpecs from './components/TechnicalSpecs';
-import Footer from './components/Footer';
+import Sidebar from './components/Sidebar';
+import TopBar from './components/TopBar';
+import OverviewView from './views/OverviewView';
+import AnalyzeView from './views/AnalyzeView';
+import LiveView from './views/LiveView';
+import SamplesView from './views/SamplesView';
+import HistoryView from './views/HistoryView';
+import ReportsView from './views/ReportsView';
+import HowItWorksView from './views/HowItWorksView';
+import DocumentationView from './views/DocumentationView';
 import { analyzeAudioFile } from './api';
 
 export default function App() {
+  const [currentView, setCurrentView] = useState('overview');
   const [analysisResult, setAnalysisResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [selectedClipId, setSelectedClipId] = useState(null);
   const [activeFile, setActiveFile] = useState(null);
-  const [activeTab, setActiveTab] = useState('upload'); // 'upload' | 'stream'
   const requestIdRef = useRef(0);
 
   const handleAnalyzeFile = async (file, clipMeta = null) => {
@@ -26,6 +26,9 @@ export default function App() {
     setIsLoading(true);
     setErrorMessage(null);
     setAnalysisResult(null);
+
+    // If analyzed from another view (e.g. samples), switch to the analyze view
+    setCurrentView('analyze');
 
     if (clipMeta) {
       setSelectedClipId(clipMeta.id);
@@ -58,132 +61,73 @@ export default function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-canvas)' }}>
-      {/* Sticky Top Navbar */}
-      <Navbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onReset={handleReset}
-        hasResult={!!analysisResult}
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-app)' }}>
+      {/* Fixed Left Sidebar Shell */}
+      <Sidebar
+        currentView={currentView}
+        setCurrentView={setCurrentView}
       />
 
-      {/* Hero Header Section */}
-      <Hero
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-      />
+      {/* Main Application Workstation Content */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflowX: 'hidden' }}>
+        {/* Top Bar Header */}
+        <TopBar
+          currentView={currentView}
+          onReset={handleReset}
+          hasResult={!!analysisResult}
+        />
 
-      {/* Main Analysis Workspace */}
-      <main id="analysis-workspace" style={{ flex: 1, padding: '40px 0' }}>
-        <div className="vg-container">
-          {/* Segmented Mode Selector Tabs */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '28px' }}>
-            <div
-              style={{
-                backgroundColor: 'var(--bg-surface)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: '10px',
-                padding: '4px',
-                display: 'inline-flex',
-                boxShadow: 'var(--shadow-sm)',
-                gap: '4px'
-              }}
-            >
-              <button
-                onClick={() => setActiveTab('upload')}
-                style={{
-                  backgroundColor: activeTab === 'upload' ? 'var(--primary-blue-subtle)' : 'transparent',
-                  color: activeTab === 'upload' ? 'var(--primary-blue)' : 'var(--text-secondary)',
-                  border: activeTab === 'upload' ? '1px solid #BFDBFE' : '1px solid transparent',
-                  padding: '8px 20px',
-                  borderRadius: '7px',
-                  fontWeight: '600',
-                  fontSize: '0.875rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <UploadCloud size={16} />
-                File Upload Inspection
-              </button>
-
-              <button
-                onClick={() => setActiveTab('stream')}
-                style={{
-                  backgroundColor: activeTab === 'stream' ? 'var(--primary-blue-subtle)' : 'transparent',
-                  color: activeTab === 'stream' ? 'var(--primary-blue)' : 'var(--text-secondary)',
-                  border: activeTab === 'stream' ? '1px solid #BFDBFE' : '1px solid transparent',
-                  padding: '8px 20px',
-                  borderRadius: '7px',
-                  fontWeight: '600',
-                  fontSize: '0.875rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <Radio size={16} />
-                Live Microphone Stream
-              </button>
-            </div>
-          </div>
-
-          {/* Mode Views */}
-          {activeTab === 'upload' ? (
-            <>
-              {/* Two-Column Grid: Input Left, Results Right */}
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))',
-                  gap: '24px',
-                  alignItems: 'start'
-                }}
-              >
-                <div>
-                  <FileUpload
-                    onAnalyze={handleAnalyzeFile}
-                    isLoading={isLoading}
-                    externalFile={activeFile}
-                    onClear={handleReset}
-                  />
-                </div>
-
-                <div>
-                  <ResultsPanel
-                    result={analysisResult}
-                    isLoading={isLoading}
-                    error={errorMessage}
-                  />
-                </div>
-              </div>
-
-              {/* Benchmark Reference Clips Section */}
-              <DemoClipPicker
-                onSelectClip={handleAnalyzeFile}
-                isLoading={isLoading}
-                selectedClipId={selectedClipId}
-              />
-            </>
-          ) : (
-            <LiveStream />
+        {/* Dynamic Viewport Container */}
+        <main style={{ flex: 1, padding: '28px 32px', maxWidth: '1280px', width: '100%', margin: '0 auto' }}>
+          {currentView === 'overview' && (
+            <OverviewView
+              onNavigate={setCurrentView}
+              onSelectDemoClip={handleAnalyzeFile}
+            />
           )}
-        </div>
-      </main>
 
-      {/* Detection Methodology Section */}
-      <HowItWorks />
+          {currentView === 'analyze' && (
+            <AnalyzeView
+              onAnalyze={handleAnalyzeFile}
+              isLoading={isLoading}
+              error={errorMessage}
+              result={analysisResult}
+              activeFile={activeFile}
+              onReset={handleReset}
+            />
+          )}
 
-      {/* System & Architecture Specifications */}
-      <TechnicalSpecs />
+          {currentView === 'live' && (
+            <LiveView />
+          )}
 
-      {/* Enterprise Footer */}
-      <Footer />
+          {currentView === 'samples' && (
+            <SamplesView
+              onSelectClip={handleAnalyzeFile}
+              isLoading={isLoading}
+              selectedClipId={selectedClipId}
+            />
+          )}
+
+          {currentView === 'history' && (
+            <HistoryView
+              onNavigate={setCurrentView}
+            />
+          )}
+
+          {currentView === 'reports' && (
+            <ReportsView />
+          )}
+
+          {currentView === 'how_it_works' && (
+            <HowItWorksView />
+          )}
+
+          {currentView === 'docs' && (
+            <DocumentationView />
+          )}
+        </main>
+      </div>
     </div>
   );
 }
