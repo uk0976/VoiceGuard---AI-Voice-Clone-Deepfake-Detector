@@ -1,6 +1,9 @@
 let rawApi = import.meta.env.VITE_API_URL;
-if (rawApi && !rawApi.startsWith('http://') && !rawApi.startsWith('https://')) {
-  rawApi = `https://${rawApi}`;
+if (rawApi) {
+  if (!rawApi.startsWith('http://') && !rawApi.startsWith('https://')) {
+    rawApi = `https://${rawApi}`;
+  }
+  rawApi = rawApi.replace(/\/+$/, '');
 }
 
 export const API_BASE = rawApi || 
