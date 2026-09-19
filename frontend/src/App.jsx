@@ -150,6 +150,7 @@ export default function App() {
             <OverviewView
               onNavigate={setCurrentView}
               onSelectDemoClip={handleAnalyzeFile}
+              reports={reports}
             />
           )}
 

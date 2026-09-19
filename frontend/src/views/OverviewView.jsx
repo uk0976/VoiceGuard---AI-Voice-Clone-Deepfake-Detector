@@ -1,54 +1,16 @@
 import React from 'react';
-import { ShieldCheck, ShieldAlert, FileAudio, Radio, ArrowRight, Activity, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, FileAudio, Radio, ArrowRight, Activity, Download, Plus } from 'lucide-react';
+import { downloadForensicPdf } from '../utils/pdfGenerator';
 
-export default function OverviewView({ onNavigate, onSelectDemoClip }) {
-  const recentAnalyses = [
-    {
-      file: 'meeting_01.wav',
-      type: 'Audio (WAV)',
-      result: 'HUMAN',
-      confidence: '94.2%',
-      duration: '18.4s',
-      analyzed: '2 min ago',
-      sampleId: 'real_1'
-    },
-    {
-      file: 'fraud_call.mp3',
-      type: 'Audio (MP3)',
-      result: 'AI GENERATED',
-      confidence: '91.7%',
-      duration: '24.1s',
-      analyzed: '12 min ago',
-      sampleId: 'fake_1'
-    },
-    {
-      file: 'customer_voicemail.m4a',
-      type: 'Audio (M4A)',
-      result: 'HUMAN',
-      confidence: '96.5%',
-      duration: '8.2s',
-      analyzed: '34 min ago',
-      sampleId: 'real_2'
-    },
-    {
-      file: 'support_ticket_841.wav',
-      type: 'Audio (WAV)',
-      result: 'AI GENERATED',
-      confidence: '88.3%',
-      duration: '11.6s',
-      analyzed: '1 hr ago',
-      sampleId: 'fake_2'
-    },
-    {
-      file: 'executive_briefing.wav',
-      type: 'Audio (WAV)',
-      result: 'HUMAN',
-      confidence: '98.1%',
-      duration: '31.2s',
-      analyzed: '3 hrs ago',
-      sampleId: 'real_3'
-    }
-  ];
+export default function OverviewView({ onNavigate, onSelectDemoClip, reports = [] }) {
+  const totalSignals = reports.length;
+  const humanCount = reports.filter(r => r.label === 'likely_real').length;
+  const aiCount = reports.filter(r => r.label === 'likely_ai_generated').length;
+
+  const humanPercent = totalSignals > 0 ? ((humanCount / totalSignals) * 100).toFixed(1) + '%' : '0.0%';
+  const aiPercent = totalSignals > 0 ? ((aiCount / totalSignals) * 100).toFixed(1) + '%' : '0.0%';
+
+  const recentAnalyses = reports.slice(0, 5);
 
   return (
     <div>
@@ -62,37 +24,39 @@ export default function OverviewView({ onNavigate, onSelectDemoClip }) {
         </p>
       </div>
 
-      {/* Compact Metrics Row */}
+      {/* Dynamic Metrics Row */}
       <div className="metric-row">
         <div className="metric-item">
           <div className="metric-label">Analyzed Signals</div>
-          <div className="metric-value">128</div>
+          <div className="metric-value">{totalSignals}</div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Total verification jobs
+            {totalSignals === 1 ? '1 total inspection' : `${totalSignals} total inspections`}
           </div>
         </div>
 
         <div className="metric-item">
           <div className="metric-label">Human Authenticated</div>
-          <div className="metric-value" style={{ color: 'var(--color-human)' }}>84</div>
+          <div className="metric-value" style={{ color: 'var(--color-human)' }}>{humanCount}</div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-            65.6% verified natural
+            {totalSignals > 0 ? `${humanPercent} verified natural` : 'No samples verified yet'}
           </div>
         </div>
 
         <div className="metric-item">
           <div className="metric-label">AI Detected</div>
-          <div className="metric-value" style={{ color: 'var(--color-ai)' }}>44</div>
+          <div className="metric-value" style={{ color: 'var(--color-ai)' }}>{aiCount}</div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-            34.4% synthetic clones
+            {totalSignals > 0 ? `${aiPercent} synthetic clones` : 'No synthetic clones detected'}
           </div>
         </div>
 
         <div className="metric-item">
-          <div className="metric-label">Model Precision</div>
-          <div className="metric-value" style={{ color: 'var(--accent-cyan)' }}>98.2%</div>
+          <div className="metric-label">Pipeline Engine</div>
+          <div className="metric-value" style={{ color: 'var(--accent-cyan)', fontSize: '1.35rem', fontWeight: '700' }}>
+            Active
+          </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Acoustic + neural fusion
+            Wav2Vec2 + Librosa 16kHz
           </div>
         </div>
       </div>
@@ -150,72 +114,113 @@ export default function OverviewView({ onNavigate, onSelectDemoClip }) {
               Logged audio inspections processed by the local detection pipeline
             </p>
           </div>
-          <button
-            onClick={() => onNavigate('history')}
-            className="btn-secondary"
-            style={{ fontSize: '0.75rem', padding: '4px 10px' }}
-          >
-            View all logs <ArrowRight size={12} />
-          </button>
+          {reports.length > 0 && (
+            <button
+              onClick={() => onNavigate('reports')}
+              className="btn-secondary"
+              style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+            >
+              View all reports <ArrowRight size={12} />
+            </button>
+          )}
         </div>
 
-        <table className="vg-table">
-          <thead>
-            <tr>
-              <th>File Name</th>
-              <th>Signal Type</th>
-              <th>Result</th>
-              <th>Confidence</th>
-              <th>Duration</th>
-              <th>Analyzed</th>
-              <th style={{ textAlign: 'right' }}>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {recentAnalyses.map((item, idx) => (
-              <tr key={idx}>
-                <td style={{ fontWeight: '500', color: 'var(--text-primary)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <FileAudio size={14} color="var(--text-muted)" />
-                    <span className="mono">{item.file}</span>
-                  </div>
-                </td>
-                <td>{item.type}</td>
-                <td>
-                  {item.result === 'HUMAN' ? (
-                    <span className="badge-status badge-human">
-                      <ShieldCheck size={12} /> Human
-                    </span>
-                  ) : (
-                    <span className="badge-status badge-ai">
-                      <ShieldAlert size={12} /> AI Generated
-                    </span>
-                  )}
-                </td>
-                <td className="mono" style={{ fontWeight: '600' }}>
-                  {item.confidence}
-                </td>
-                <td className="mono" style={{ color: 'var(--text-muted)' }}>
-                  {item.duration}
-                </td>
-                <td style={{ color: 'var(--text-muted)' }}>
-                  {item.analyzed}
-                </td>
-                <td style={{ textAlign: 'right' }}>
-                  <button
-                    onClick={() => {
-                      onNavigate('samples');
-                    }}
-                    className="btn-secondary"
-                    style={{ padding: '4px 8px', fontSize: '0.6875rem' }}
-                  >
-                    View
-                  </button>
-                </td>
+        {reports.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '44px 20px', borderTop: '1px solid var(--border-subtle)' }}>
+            <div
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: 'var(--radius-btn)',
+                backgroundColor: 'var(--surface-secondary)',
+                border: '1px solid var(--border-subtle)',
+                color: 'var(--text-muted)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '12px'
+              }}
+            >
+              <Activity size={18} />
+            </div>
+            <div style={{ fontSize: '0.9375rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '4px' }}>
+              No inspections recorded yet
+            </div>
+            <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', maxWidth: '380px', margin: '0 auto 16px auto', lineHeight: 1.5 }}>
+              Audio files uploaded or tested via demo clips will automatically update your forensic telemetry and recent analyses in real time.
+            </div>
+            <button
+              onClick={() => onNavigate('analyze')}
+              className="btn-primary"
+              style={{ fontSize: '0.75rem', padding: '6px 14px' }}
+            >
+              <Plus size={13} /> Analyze an audio file
+            </button>
+          </div>
+        ) : (
+          <table className="vg-table">
+            <thead>
+              <tr>
+                <th>File Name</th>
+                <th>Signal Type</th>
+                <th>Result</th>
+                <th>Confidence</th>
+                <th>Duration</th>
+                <th>Analyzed (UTC)</th>
+                <th style={{ textAlign: 'right' }}>Forensic Report</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {recentAnalyses.map((item) => {
+                const isFake = item.label === 'likely_ai_generated';
+                const confPercent = Math.round((item.confidence || 0) * 100);
+                const ext = (item.filename?.split('.').pop() || 'wav').toUpperCase();
+
+                return (
+                  <tr key={item.id}>
+                    <td style={{ fontWeight: '500', color: 'var(--text-primary)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <FileAudio size={14} color="var(--text-muted)" />
+                        <span className="mono">{item.filename}</span>
+                      </div>
+                    </td>
+                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>Audio ({ext})</td>
+                    <td>
+                      {isFake ? (
+                        <span className="badge-status badge-ai">
+                          <ShieldAlert size={12} /> AI Generated
+                        </span>
+                      ) : (
+                        <span className="badge-status badge-human">
+                          <ShieldCheck size={12} /> Human
+                        </span>
+                      )}
+                    </td>
+                    <td className="mono" style={{ fontWeight: '600', color: isFake ? 'var(--color-ai)' : 'var(--color-human)' }}>
+                      {confPercent}%
+                    </td>
+                    <td className="mono" style={{ color: 'var(--text-muted)' }}>
+                      {item.duration || '--'}
+                    </td>
+                    <td style={{ color: 'var(--text-muted)', fontSize: '0.8125rem' }}>
+                      {item.timestamp}
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      <button
+                        onClick={() => downloadForensicPdf(item)}
+                        className="btn-secondary"
+                        style={{ padding: '4px 8px', fontSize: '0.6875rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                        title="Download forensic PDF report"
+                      >
+                        <Download size={11} /> PDF
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
