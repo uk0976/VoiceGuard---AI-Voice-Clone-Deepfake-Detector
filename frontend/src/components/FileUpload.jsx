@@ -1,11 +1,21 @@
 import React, { useState, useRef } from 'react';
 import { UploadCloud, FileAudio, Play, X, Loader2, Sparkles } from 'lucide-react';
 
-export default function FileUpload({ onAnalyze, isLoading }) {
+export default function FileUpload({ onAnalyze, isLoading, externalFile, onClear }) {
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [audioUrl, setAudioUrl] = useState(null);
   const fileInputRef = useRef(null);
+
+  React.useEffect(() => {
+    if (externalFile) {
+      setSelectedFile(externalFile);
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+      setAudioUrl(URL.createObjectURL(externalFile));
+    }
+  }, [externalFile]);
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -49,6 +59,9 @@ export default function FileUpload({ onAnalyze, isLoading }) {
     }
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+    if (onClear) {
+      onClear();
     }
   };
 

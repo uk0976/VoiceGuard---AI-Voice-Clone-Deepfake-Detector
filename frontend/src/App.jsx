@@ -11,13 +11,17 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [selectedClipId, setSelectedClipId] = useState(null);
+  const [activeFile, setActiveFile] = useState(null);
   const [activeTab, setActiveTab] = useState('upload'); // 'upload' | 'stream'
 
   const handleAnalyzeFile = async (file, clipMeta = null) => {
+    setActiveFile(file);
     setIsLoading(true);
     setErrorMessage(null);
     if (clipMeta) {
       setSelectedClipId(clipMeta.id);
+    } else {
+      setSelectedClipId(null);
     }
 
     try {
@@ -35,6 +39,7 @@ export default function App() {
     setAnalysisResult(null);
     setErrorMessage(null);
     setSelectedClipId(null);
+    setActiveFile(null);
   };
 
   return (
@@ -238,7 +243,12 @@ export default function App() {
               >
                 {/* Left: Upload & Audio Inspector */}
                 <div>
-                  <FileUpload onAnalyze={handleAnalyzeFile} isLoading={isLoading} />
+                  <FileUpload
+                    onAnalyze={handleAnalyzeFile}
+                    isLoading={isLoading}
+                    externalFile={activeFile}
+                    onClear={handleReset}
+                  />
                 </div>
 
                 {/* Right: Results & Acoustic Metrics */}
