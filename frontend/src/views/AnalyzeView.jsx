@@ -17,6 +17,7 @@ import {
   Download
 } from 'lucide-react';
 import { downloadForensicPdf } from '../utils/pdfGenerator';
+import ForensicLoadingScanner from '../components/ForensicLoadingScanner';
 
 export default function AnalyzeView({ onAnalyze, isLoading, error, result, activeFile, onReset, onSaveReport }) {
   const [dragActive, setDragActive] = useState(false);
@@ -443,17 +444,9 @@ export default function AnalyzeView({ onAnalyze, isLoading, error, result, activ
         </div>
       )}
 
-      {/* Loading Skeleton */}
+      {/* Dynamic Forensic Loading Scanner */}
       {isLoading && (
-        <div className="vg-panel" style={{ textAlign: 'center', padding: '36px 20px', marginBottom: '24px' }}>
-          <Loader2 size={24} color="var(--accent-cyan)" style={{ animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} />
-          <div style={{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '4px' }}>
-            Processing Audio Signal
-          </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            Downsampling to 16kHz mono · Extracting pitch jitter · Running Wav2Vec2 transformer
-          </div>
-        </div>
+        <ForensicLoadingScanner filename={selectedFile?.name || activeFile?.name || 'audio_clip.wav'} />
       )}
 
       {/* Error Alert */}
