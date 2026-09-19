@@ -1,6 +1,8 @@
 """
 VoiceGuard — Shared Audio Analysis Engine
-Step 1: Hugging Face Deepfake Classifier (MelodyMachine/Deepfake-audio-detection-V2)
+Integrates:
+1. Hugging Face Deepfake Classifier (MelodyMachine/Deepfake-audio-detection-V2)
+2. Librosa Signal-Processing Heuristic Explainability Layer (heuristics.py)
 """
 
 import os
@@ -18,6 +20,8 @@ try:
     truststore.inject_into_ssl()
 except Exception:
     pass
+
+from heuristics import compute_heuristics
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -89,9 +93,9 @@ def analyze_audio(waveform: np.ndarray, sample_rate: int) -> Dict[str, Any]:
     """
     Core analysis function shared by both Mode A (File Upload) and Mode B (Real-time Streaming).
     
-    In Step 1:
-    Uses only the Hugging Face classifier model (MelodyMachine/Deepfake-audio-detection-V2).
-    Heuristics will be integrated in Step 3.
+    Combines:
+    1. Pretrained Hugging Face audio classifier (model_score)
+    2. Real signal-processing heuristics (pitch jitter, spectral flatness, pause patterns)
     
     Returns JSON dictionary adhering strictly to the Section 5 API contract:
     {
@@ -103,11 +107,8 @@ def analyze_audio(waveform: np.ndarray, sample_rate: int) -> Dict[str, Any]:
     """
     import torch
 
-    # 1. Preprocess audio to 16kHz mono
-    processed_audio = preprocess_audio(waveform, sample_rate)
-
     # If audio is empty or entirely silent, return safe default
-    if len(processed_audio) == 0 or np.all(processed_audio == 0):
+    if len(waveform) == 0 or np.all(waveform == 0):
         return {
             "label": "likely_real",
             "confidence": 0.0,
@@ -115,10 +116,12 @@ def analyze_audio(waveform: np.ndarray, sample_rate: int) -> Dict[str, Any]:
             "heuristic_flags": []
         }
 
+    # 1. Preprocess audio for neural network (16kHz mono)
+    processed_audio = preprocess_audio(waveform, sample_rate)
+
     # 2. Run Hugging Face Wav2Vec2 Classifier
     feature_extractor, model, device = get_model_and_extractor()
 
-    # Extract features
     inputs = feature_extractor(
         processed_audio,
         sampling_rate=TARGET_SAMPLE_RATE,
@@ -142,9 +145,15 @@ def analyze_audio(waveform: np.ndarray, sample_rate: int) -> Dict[str, Any]:
     fake_prob = float(probabilities[fake_idx].item())
     model_score = round(fake_prob, 2)
 
-    # Step 1: No heuristics yet
-    heuristic_flags: List[str] = []
-    confidence = model_score
+    # 3. Run Heuristic Explainability Layer (pitch jitter, spectral flatness, pause patterns)
+    heuristics_result = compute_heuristics(waveform, sample_rate)
+    heuristic_score = heuristics_result["heuristic_score"]
+    heuristic_flags: List[str] = heuristics_result["flags"]
+
+    # 4. Merge model_score and heuristic_score into final confidence
+    # Model is the primary trained classifier (75% weight), heuristics provide grounding and explainability (25% weight)
+    confidence = round(0.75 * model_score + 0.25 * heuristic_score, 2)
+    confidence = max(0.0, min(1.0, confidence))
 
     label = "likely_ai_generated" if confidence >= 0.50 else "likely_real"
 
