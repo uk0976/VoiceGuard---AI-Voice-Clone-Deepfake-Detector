@@ -55,6 +55,11 @@ def get_model_and_extractor():
         from transformers import AutoFeatureExtractor, AutoModelForAudioClassification
 
         _DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        if _DEVICE.type == "cpu":
+            try:
+                torch.set_num_threads(1)
+            except Exception:
+                pass
         logger.info(f"Loading classifier '{MODEL_NAME}' on device: {_DEVICE}...")
 
         _FEATURE_EXTRACTOR = AutoFeatureExtractor.from_pretrained(MODEL_NAME)

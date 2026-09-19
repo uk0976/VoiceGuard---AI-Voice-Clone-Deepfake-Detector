@@ -1,9 +1,9 @@
-/**
- * VoiceGuard — Frontend API Client
- * Interfaces with FastAPI /analyze endpoint and future /ws/stream WebSocket.
- */
+let rawApi = import.meta.env.VITE_API_URL;
+if (rawApi && !rawApi.startsWith('http://') && !rawApi.startsWith('https://')) {
+  rawApi = `https://${rawApi}`;
+}
 
-export const API_BASE = import.meta.env.VITE_API_URL || 
+export const API_BASE = rawApi || 
   (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
     ? 'http://127.0.0.1:8000' 
     : '');

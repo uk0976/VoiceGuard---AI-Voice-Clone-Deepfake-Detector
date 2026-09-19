@@ -30,7 +30,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Pre-cache model weights during build to guarantee fast cold start in production
-RUN python -c "from analysis import get_model_and_extractor; print('Pre-caching model...'); get_model_and_extractor(); print('Model cached successfully!')"
+RUN python -c "from analysis import get_model_and_extractor; print('Pre-caching model...'); get_model_and_extractor(); print('Model cached successfully!')" || echo "Note: Model will download on first container boot"
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
