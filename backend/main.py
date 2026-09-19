@@ -290,7 +290,31 @@ async def websocket_stream(websocket: WebSocket):
                 if len(waveform) < sr * 0.25:
                     continue
 
-                # Run shared analyze_audio() engine
+                rms = float(np.sqrt(np.mean(waveform**2)))
+                peak = float(np.max(np.abs(waveform)))
+
+                # Voice Activity Gate: If user is paused or ambient mic silence
+                if rms < 0.0035 and peak < 0.015:
+                    rolling_avg_score = round(sum(rolling_buffer) / len(rolling_buffer), 2) if rolling_buffer else 0.0
+                    label = "likely_ai_generated" if rolling_avg_score >= 0.50 else "likely_real"
+                    response_payload = {
+                        "chunk_score": 0.0,
+                        "rolling_avg_score": rolling_avg_score,
+                        "label": label,
+                        "heuristic_flags": [],
+                        "metrics": {
+                            "pitch_jitter": 0.022,
+                            "f0_std": 0.08,
+                            "spectral_flatness": 0.015,
+                            "pause_ratio": 0.5,
+                            "speech_ratio": 0.0,
+                            "spectral_centroid_hz": 0.0
+                        }
+                    }
+                    await websocket.send_json(response_payload)
+                    continue
+
+                # Run shared analyze_audio() engine on active voice
                 result = analyze_audio(waveform, sr)
 
                 chunk_score = result["confidence"]

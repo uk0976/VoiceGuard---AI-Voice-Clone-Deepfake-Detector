@@ -107,13 +107,24 @@ def analyze_audio(waveform: np.ndarray, sample_rate: int) -> Dict[str, Any]:
     """
     import torch
 
-    # If audio is empty or entirely silent, return safe default
-    if len(waveform) == 0 or np.all(waveform == 0):
+    rms = float(np.sqrt(np.mean(waveform**2)))
+    peak = float(np.max(np.abs(waveform)))
+
+    # If audio is empty, near-silent, or quiet ambient noise floor (< -45dB)
+    if len(waveform) == 0 or np.all(waveform == 0) or (rms < 0.0035 and peak < 0.015):
         return {
             "label": "likely_real",
             "confidence": 0.0,
             "model_score": 0.0,
-            "heuristic_flags": []
+            "heuristic_flags": [],
+            "metrics": {
+                "pitch_jitter": 0.022,
+                "f0_std": 0.08,
+                "spectral_flatness": 0.015,
+                "pause_ratio": 0.5,
+                "speech_ratio": 0.0,
+                "spectral_centroid_hz": 0.0
+            }
         }
 
     # 1. Preprocess audio for neural network (16kHz mono)
@@ -146,16 +157,13 @@ def analyze_audio(waveform: np.ndarray, sample_rate: int) -> Dict[str, Any]:
     heuristic_flags: List[str] = heuristics_result["flags"]
 
     # 4. Merge model_score and heuristic_score into final confidence
-    # Model is primary for direct digital files (75% model + 25% heuristics).
-    # When acoustic room transmission suppresses raw neural features (model_score < 0.50),
-    # but the physical heuristics detect synthetic artifacts (heuristic_score >= 0.50),
-    # the explainable acoustic heuristics provide defense (75% heuristics + 25% model).
     if model_score >= 0.50:
-        confidence = round(0.75 * model_score + 0.25 * heuristic_score, 2)
-    elif heuristic_score >= 0.50:
-        confidence = round(0.75 * heuristic_score + 0.25 * model_score, 2)
+        confidence = round(0.70 * model_score + 0.30 * max(model_score, heuristic_score), 2)
+    elif heuristic_score >= 0.80 and model_score >= 0.35:
+        confidence = round(0.55 * heuristic_score + 0.45 * model_score, 2)
     else:
-        confidence = round(0.75 * model_score + 0.25 * heuristic_score, 2)
+        # Neural model indicates natural human speech (model_score < 0.50)
+        confidence = round(0.80 * model_score + 0.20 * heuristic_score, 2)
 
     confidence = max(0.0, min(1.0, confidence))
     label = "likely_ai_generated" if confidence >= 0.50 else "likely_real"

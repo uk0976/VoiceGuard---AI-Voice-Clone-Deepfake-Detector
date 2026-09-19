@@ -149,6 +149,9 @@ export default function LiveView() {
         }
       };
 
+      setLatestData(null);
+      setChunkCount(0);
+
       // Web Audio API Pipeline (16kHz downsampling)
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       const audioCtx = new AudioContext();
@@ -178,7 +181,7 @@ export default function LiveView() {
           sum += dataArray[i];
         }
         const avg = sum / bufferLength;
-        setAudioLevel(Math.min(100, Math.round((avg / 128) * 100)));
+        setAudioLevel(Math.min(100, Math.round((avg / 48) * 100)));
 
         ctx.fillStyle = '#080B10';
         ctx.fillRect(0, 0, canvas.width, canvas.height);

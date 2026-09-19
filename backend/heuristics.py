@@ -57,8 +57,11 @@ def extract_pitch_jitter(y: np.ndarray, sr: int) -> Tuple[float, bool, float, fl
         relative_jitter = float(np.mean(f0_diffs / (valid_f0[:-1] + 1e-6)))
         std_f0 = float(np.std(valid_f0) / (np.mean(valid_f0) + 1e-6))
         
-        # Unnaturally stable pitch threshold: relative jitter < 0.018 or F0 std < 0.06
-        is_synthetic = (relative_jitter < 0.018 or std_f0 < 0.06)
+        # Unnaturally stable pitch threshold:
+        # TTS vocoders exhibit rigid periodicity (< 0.008 relative jitter).
+        # In conversational speech or short 1.5s segments, natural speech has std_f0 ~ 0.03 - 0.06.
+        # Only flag if relative jitter is unnaturally flat (< 0.008) or both jitter and F0 std are rigid.
+        is_synthetic = (relative_jitter < 0.008 or (relative_jitter < 0.014 and std_f0 < 0.020))
         
         # Map jitter to 0..1 score
         if is_synthetic:
@@ -79,18 +82,18 @@ def extract_spectral_flatness(y: np.ndarray, sr: int) -> Tuple[float, bool, floa
     
     Explanation & Threshold Rationale:
     Spectral flatness (Wiener entropy) measures energy distribution across frequency bands.
-    Natural resonant human voice has strong formant peaks (low spectral flatness, ~0.010 - 0.017).
-    Vocoded or synthetic audio artifacts exhibit higher spectral dispersion and white phase leakage (> 0.023).
+    Natural resonant human voice has strong formant peaks (low spectral flatness, ~0.008 - 0.025).
+    Vocoded or synthetic audio artifacts exhibit higher spectral dispersion and white phase leakage (> 0.045).
     
-    - Threshold: Mean spectral flatness > 0.023 indicates an unnaturally flat, vocoded envelope.
+    - Threshold: Mean spectral flatness > 0.045 indicates an unnaturally flat, vocoded envelope.
     - Returns: (flatness_score [0..1 where 1 is synthetic], flag_triggered, mean_flatness)
     """
     try:
         flatness = librosa.feature.spectral_flatness(y=y)
         mean_flatness = float(np.mean(flatness))
         
-        # Threshold: > 0.035 suggests unnatural vocoder flatness or high-frequency buzz
-        is_flat = mean_flatness > 0.035
+        # Threshold: > 0.045 suggests unnatural vocoder flatness or high-frequency buzz
+        is_flat = mean_flatness > 0.045
         
         # Map to 0..1 score
         flatness_score = max(0.0, min(1.0, (mean_flatness - 0.015) / 0.035))
@@ -113,15 +116,15 @@ def extract_pause_patterns(y: np.ndarray, sr: int) -> Tuple[float, bool, float, 
     (typically 100ms - 500ms). Synthetic voice clips often lack micro-breathing pauses,
     generating unbroken phoneme streams or unnaturally rigid silence gaps.
     
-    - For clips >= 2.5 seconds: if non-silent speech occupies > 96% of the clip with zero
+    - For clips >= 3.0 seconds: if non-silent speech occupies > 96% of the clip with zero
       pauses >= 150ms, it indicates missing natural breath pauses.
     - Returns: (pause_score [0..1 where 1 is synthetic], flag_triggered, pause_ratio, speech_ratio)
     """
     try:
         duration = len(y) / sr
-        if duration < 2.0:
+        if duration < 3.0:
             # Short chunk cannot be penalized for missing breaths
-            return 0.0, False, 0.0, 1.0
+            return 0.0, False, 0.40, 0.60
         
         # Detect non-silent intervals with 25dB below peak threshold (immune to ambient mic noise)
         intervals = librosa.effects.split(y=y, top_db=25, frame_length=1024, hop_length=256)
