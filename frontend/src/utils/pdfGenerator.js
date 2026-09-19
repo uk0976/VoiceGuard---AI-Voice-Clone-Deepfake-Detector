@@ -1,5 +1,41 @@
 import { jsPDF } from 'jspdf';
 
+let cachedLogoDataUrl = null;
+
+export async function getLogoDataUrl() {
+  if (cachedLogoDataUrl) return cachedLogoDataUrl;
+  if (typeof window === 'undefined') return null;
+
+  return new Promise((resolve) => {
+    try {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = 160;
+          canvas.height = 160;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, 160, 160);
+          cachedLogoDataUrl = canvas.toDataURL('image/png');
+          resolve(cachedLogoDataUrl);
+        } catch {
+          resolve(img);
+        }
+      };
+      img.onerror = () => resolve(null);
+      img.src = '/logo.png';
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+// Kick off eager preload in browser
+if (typeof window !== 'undefined') {
+  getLogoDataUrl();
+}
+
 /**
  * Generates a clean, professional forensic PDF report for voice authenticity inspections.
  * 
@@ -13,14 +49,17 @@ import { jsPDF } from 'jspdf';
  * @param {number} reportData.model_score - Wav2Vec2 neural model score (0..1)
  * @param {Array<string>} reportData.heuristic_flags - Array of triggered acoustic flags
  * @param {Object} [reportData.metrics] - Raw acoustic measurements
+ * @param {string|HTMLImageElement} [logoData] - Optional pre-loaded logo image or data URL
  * @returns {jsPDF} The jsPDF document instance
  */
-export function generateForensicPdf(reportData) {
+export function generateForensicPdf(reportData, logoData = null) {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
     format: 'a4'
   });
+
+  const activeLogo = logoData || cachedLogoDataUrl;
 
   const isFake = reportData.label === 'likely_ai_generated';
   const rawConf = reportData.confidence || 0;
@@ -50,16 +89,33 @@ export function generateForensicPdf(reportData) {
   doc.setFillColor(34, 167, 214); // #22A7D6
   doc.rect(0, 0, 210, 3, 'F');
 
+  // Render official VoiceGuard logo beside the brand name
+  let titleX = 16;
+  if (activeLogo) {
+    try {
+      doc.addImage(activeLogo, 'PNG', 16, 6.5, 23, 23);
+      titleX = 43;
+    } catch (logoErr) {
+      console.warn('Logo render fallback:', logoErr);
+      titleX = 16;
+    }
+  }
+
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.text('VOICEGUARD FORENSIC ANALYSIS REPORT', 16, 16);
+  doc.setFontSize(13);
+  doc.text('VOICEGUARD FORENSIC ANALYSIS REPORT', titleX, 15);
+
+  doc.setTextColor(34, 167, 214);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.text('REAL VOICES. A SAFER TOMORROW.', titleX, 20.5);
 
   doc.setTextColor(148, 163, 184); // #94A3B8
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
-  doc.text('Acoustic Invariant Verification & Deepfake Neural Classification', 16, 23);
-  doc.text('Document Security: FOR OFFICIAL / FORENSIC RECORD ONLY', 16, 29);
+  doc.setFontSize(7.5);
+  doc.text('Acoustic Invariant Verification & Deepfake Neural Classification', titleX, 25.5);
+  doc.text('Document Security: FOR OFFICIAL / FORENSIC RECORD ONLY', titleX, 30.5);
 
   // Right-aligned report ID and date
   doc.setTextColor(34, 167, 214);
@@ -254,7 +310,42 @@ export function generateForensicPdf(reportData) {
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(51, 65, 85);
 
-  if (isFake) {
+  if (summaryData) {
+    // Dynamically generated non-hardcoded forensic evaluation
+    doc.setFont('helvetica', 'bold');
+    if (isFake) {
+      doc.setTextColor(185, 28, 28);
+      doc.text(summaryData.headline || 'Physical Speech Invariants Violated:', 22, y + 7);
+    } else {
+      doc.setTextColor(21, 128, 61);
+      doc.text(summaryData.headline || 'All Biomechanical Checks Passed:', 22, y + 7);
+    }
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.8);
+    doc.setTextColor(51, 65, 85);
+
+    let curY = y + 13;
+    if (summaryData.bullets && summaryData.bullets.length > 0) {
+      summaryData.bullets.slice(0, 3).forEach((b) => {
+        const cleanBullet = b.length > 95 ? b.substring(0, 92) + '...' : b;
+        doc.text(`• ${cleanBullet}`, 26, curY);
+        curY += 5;
+      });
+    }
+
+    if (summaryData.overview) {
+      const splitOverview = doc.splitTextToSize(summaryData.overview, 166);
+      doc.setFontSize(7.5);
+      doc.text(splitOverview.slice(0, 2), 22, curY + 2);
+    }
+
+    if (summaryData.guidance) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7.5);
+      doc.setTextColor(isFake ? 185 : 21, isFake ? 28 : 128, isFake ? 28 : 61);
+      doc.text(`Advisory: ${summaryData.guidance}`, 22, y + 40);
+    }
+  } else if (isFake) {
     if (flags.length > 0) {
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(185, 28, 28);
@@ -309,8 +400,12 @@ export function generateForensicPdf(reportData) {
 /**
  * Convenience helper to download the report immediately.
  */
-export function downloadForensicPdf(reportData) {
-  const doc = generateForensicPdf(reportData);
-  const cleanName = (reportData.filename || 'VoiceGuard_Report').replace(/\.[^/.]+$/, "");
+export async function downloadForensicPdf(reportData) {
+  let logo = cachedLogoDataUrl;
+  if (!logo) {
+    logo = await getLogoDataUrl();
+  }
+  const doc = generateForensicPdf(reportData, logo);
+  const cleanName = (reportData.filename || 'VoiceGuard_Report').replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9_-]/g, '_');
   doc.save(`${cleanName}_Forensic_Report.pdf`);
 }

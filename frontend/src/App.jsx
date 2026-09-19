@@ -174,7 +174,10 @@ export default function App() {
           )}
 
           {currentView === 'live' && (
-            <LiveView />
+            <LiveView
+              onSaveReport={saveReport}
+              onNavigate={setCurrentView}
+            />
           )}
 
           {currentView === 'samples' && (
