@@ -97,8 +97,9 @@ export default function LiveStream() {
 
       ws.onerror = (err) => {
         console.error('WebSocket error:', err);
+        cleanupResources();
+        setStreamStatus('error');
         setErrorMessage('WebSocket connection failed. Ensure backend is running on port 8000.');
-        stopStreaming();
       };
 
       ws.onclose = () => {
@@ -141,10 +142,10 @@ export default function LiveStream() {
         let x = 0;
 
         for (let i = 0; i < bufferLength; i++) {
-          const barHeight = (dataArray[i] / 255) * canvas.height;
-          const gradient = ctx.createLinearGradient(0, canvas.height, 0, 0);
-          gradient.addColorStop(0, '#0284c7');
-          gradient.addColorStop(1, '#06b6d4');
+          const barHeight = (dataArray[i] / 255) * canvas.height * 0.85;
+          const gradient = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - barHeight);
+          gradient.addColorStop(0, '#06b6d4');
+          gradient.addColorStop(1, '#38bdf8');
 
           ctx.fillStyle = gradient;
           ctx.fillRect(x, canvas.height - barHeight, barWidth - 1, barHeight);
@@ -156,7 +157,7 @@ export default function LiveStream() {
 
       drawWaveform();
 
-      // Audio Processor node: Collect ~1.5 seconds of audio (~24,000 samples at 16kHz)
+      // Audio processor node for chunk aggregation
       const bufferSize = 4096;
       const processor = audioCtx.createScriptProcessor(bufferSize, 1, 1);
       processorRef.current = processor;
@@ -199,22 +200,22 @@ export default function LiveStream() {
 
     } catch (err) {
       console.error('Microphone initialization error:', err);
+      cleanupResources();
       setStreamStatus('error');
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
         setErrorMessage('Microphone access denied. Please allow microphone permissions in your browser settings to use live streaming mode.');
       } else {
         setErrorMessage(`Microphone error: ${err.message || 'Unable to access audio input'}`);
       }
-      stopStreaming();
     }
   };
 
-  const stopStreaming = () => {
+  const cleanupResources = () => {
     setIsListening(false);
-    setStreamStatus('idle');
 
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
     }
 
     if (processorRef.current) {
@@ -241,6 +242,11 @@ export default function LiveStream() {
 
     sampleBufferRef.current = [];
     setAudioLevel(0);
+  };
+
+  const stopStreaming = () => {
+    cleanupResources();
+    setStreamStatus('idle');
   };
 
   const isFake = latestData?.label === 'likely_ai_generated';
