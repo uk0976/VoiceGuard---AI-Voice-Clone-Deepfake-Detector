@@ -105,7 +105,7 @@ def run_benchmark():
     print(" Verifying that acoustic room degradation preserves score divergence")
     print("=" * 70)
 
-    test_files = ["fake_1.wav", "real_1.wav"]
+    test_files = sys.argv[1:] if len(sys.argv) > 1 else ["fake_1.wav", "real_1.wav"]
     results = {}
 
     for fname in test_files:
@@ -126,6 +126,7 @@ def run_benchmark():
         mod = data.get("model_score", 0) * 100
         lbl = data.get("label", "")
         print(f"{fname:<16} | {lbl:<20} | {conf:>8.1f}% | {mod:>9.1f}% | {flags_str}")
+        print(f"  -> Raw /analyze JSON: {data}")
 
     print("-" * 70)
 

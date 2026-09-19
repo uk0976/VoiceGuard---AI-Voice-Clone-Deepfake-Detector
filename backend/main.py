@@ -137,13 +137,13 @@ async def analyze_file(file: UploadFile = File(...)):
         if not content_type.startswith("audio/"):
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid file type '{extension}'. Please upload a valid audio file (.wav or .mp3)."
+                detail=f"Unsupported file format '{extension or 'unknown'}'. Please upload an audio file (.wav, .mp3, .m4a, .ogg)."
             )
 
     try:
         content = await file.read()
         if len(content) == 0:
-            raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+            raise HTTPException(status_code=400, detail="Uploaded audio file is empty (0 bytes).")
 
         # Load audio into numpy array and sample rate
         try:
@@ -152,8 +152,15 @@ async def analyze_file(file: UploadFile = File(...)):
             waveform, sample_rate = sf.read(audio_io)
         except Exception:
             # Fallback to librosa which handles mp3, ogg, etc. via audioread/ffmpeg
-            audio_io = io.BytesIO(content)
-            waveform, sample_rate = librosa.load(audio_io, sr=None, mono=False)
+            try:
+                audio_io = io.BytesIO(content)
+                waveform, sample_rate = librosa.load(audio_io, sr=None, mono=False)
+            except Exception as decode_err:
+                logger.warning(f"Failed to decode audio file '{filename}': {decode_err}")
+                raise HTTPException(
+                    status_code=400,
+                    detail="Could not decode audio file. The file may be corrupt or not a recognized audio format."
+                )
 
         waveform = np.asarray(waveform, dtype=np.float32)
 

@@ -146,10 +146,18 @@ def analyze_audio(waveform: np.ndarray, sample_rate: int) -> Dict[str, Any]:
     heuristic_flags: List[str] = heuristics_result["flags"]
 
     # 4. Merge model_score and heuristic_score into final confidence
-    # Model is the primary trained classifier (75% weight), heuristics provide grounding and explainability (25% weight)
-    confidence = round(0.75 * model_score + 0.25 * heuristic_score, 2)
-    confidence = max(0.0, min(1.0, confidence))
+    # Model is primary for direct digital files (75% model + 25% heuristics).
+    # When acoustic room transmission suppresses raw neural features (model_score < 0.50),
+    # but the physical heuristics detect synthetic artifacts (heuristic_score >= 0.50),
+    # the explainable acoustic heuristics provide defense (75% heuristics + 25% model).
+    if model_score >= 0.50:
+        confidence = round(0.75 * model_score + 0.25 * heuristic_score, 2)
+    elif heuristic_score >= 0.50:
+        confidence = round(0.75 * heuristic_score + 0.25 * model_score, 2)
+    else:
+        confidence = round(0.75 * model_score + 0.25 * heuristic_score, 2)
 
+    confidence = max(0.0, min(1.0, confidence))
     label = "likely_ai_generated" if confidence >= 0.50 else "likely_real"
 
     return {

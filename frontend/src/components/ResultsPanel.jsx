@@ -57,15 +57,28 @@ export default function ResultsPanel({ result, isLoading, error }) {
   }
 
   if (error) {
+    const isFormatError = /invalid|unsupported|format|decode|empty/i.test(error);
+    const errorTitle = isFormatError ? 'Invalid Audio File' : 'Analysis Error';
+
     return (
-      <div className="vg-card" style={{ width: '100%', borderColor: 'rgba(239, 68, 68, 0.4)', background: 'rgba(239, 68, 68, 0.04)' }}>
+      <div className="vg-card" style={{ width: '100%', borderColor: 'rgba(239, 68, 68, 0.4)', background: 'rgba(239, 68, 68, 0.04)', padding: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
-          <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }}>
+          <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', flexShrink: 0 }}>
             <AlertTriangle size={26} />
           </div>
-          <div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#f87171' }}>Analysis Failed</h3>
-            <p style={{ fontSize: '0.875rem', color: '#cbd5e1', marginTop: '4px' }}>{error}</p>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#f87171' }}>{errorTitle}</h3>
+              <span style={{ fontSize: '0.7rem', color: '#f87171', background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.25)', padding: '2px 8px', borderRadius: '4px', fontWeight: '600' }}>
+                {isFormatError ? 'HTTP 400' : 'ERROR'}
+              </span>
+            </div>
+            <p style={{ fontSize: '0.875rem', color: '#cbd5e1', marginTop: '6px', lineHeight: '1.5' }}>{error}</p>
+            {isFormatError && (
+              <div style={{ marginTop: '12px', padding: '10px 12px', background: '#0f172a', borderRadius: '6px', border: '1px solid #1e293b', fontSize: '0.78rem', color: '#94a3b8' }}>
+                <strong style={{ color: '#38bdf8' }}>Supported Formats:</strong> WAV (16-bit PCM), MP3, M4A, OGG up to 25MB. Try selecting one of the bundled demo clips below to test the detection engine.
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,20 +1,39 @@
 import React, { useState, useRef } from 'react';
-import { UploadCloud, FileAudio, Play, X, Loader2, Sparkles } from 'lucide-react';
+import { UploadCloud, FileAudio, Play, X, Loader2, Sparkles, AlertTriangle } from 'lucide-react';
 
 export default function FileUpload({ onAnalyze, isLoading, externalFile, onClear }) {
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [audioUrl, setAudioUrl] = useState(null);
+  const [fileWarning, setFileWarning] = useState(null);
   const fileInputRef = useRef(null);
+
+  const validateAndSetFile = (file) => {
+    if (!file) return;
+    setSelectedFile(file);
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl);
+    }
+
+    const isAudio = file.type?.startsWith('audio/') || /\.(wav|mp3|m4a|ogg|flac|aac|wma)$/i.test(file.name || '');
+    if (!isAudio) {
+      setFileWarning(`"${file.name}" is not an audio file. Supported formats: .wav, .mp3, .m4a, .ogg.`);
+      setAudioUrl(null);
+    } else if (file.size === 0) {
+      setFileWarning(`"${file.name}" is empty (0 bytes). Please choose a valid audio file.`);
+      setAudioUrl(null);
+    } else if (file.size > 25 * 1024 * 1024) {
+      setFileWarning(`File size (${(file.size / (1024 * 1024)).toFixed(1)}MB) exceeds 25MB limit.`);
+      setAudioUrl(null);
+    } else {
+      setFileWarning(null);
+      setAudioUrl(URL.createObjectURL(file));
+    }
+  };
 
   React.useEffect(() => {
     if (externalFile) {
-      setSelectedFile(externalFile);
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl);
-      }
-      const isAudio = externalFile.type?.startsWith('audio/') || /\.(wav|mp3|m4a|ogg|flac|aac|wma)$/i.test(externalFile.name || '');
-      setAudioUrl(isAudio ? URL.createObjectURL(externalFile) : null);
+      validateAndSetFile(externalFile);
     }
   }, [externalFile]);
 
@@ -29,13 +48,7 @@ export default function FileUpload({ onAnalyze, isLoading, externalFile, onClear
   };
 
   const processFile = (file) => {
-    if (!file) return;
-    setSelectedFile(file);
-    if (audioUrl) {
-      URL.revokeObjectURL(audioUrl);
-    }
-    const isAudio = file.type?.startsWith('audio/') || /\.(wav|mp3|m4a|ogg|flac|aac|wma)$/i.test(file.name || '');
-    setAudioUrl(isAudio ? URL.createObjectURL(file) : null);
+    validateAndSetFile(file);
   };
 
   const handleDrop = (e) => {
@@ -55,6 +68,7 @@ export default function FileUpload({ onAnalyze, isLoading, externalFile, onClear
 
   const handleClear = () => {
     setSelectedFile(null);
+    setFileWarning(null);
     if (audioUrl) {
       URL.revokeObjectURL(audioUrl);
       setAudioUrl(null);
@@ -152,8 +166,9 @@ export default function FileUpload({ onAnalyze, isLoading, externalFile, onClear
               <audio controls src={audioUrl} style={{ width: '100%', height: '36px', borderRadius: '6px' }} />
             </div>
           ) : (
-            <div style={{ marginTop: '10px', marginBottom: '16px', padding: '8px 12px', background: 'rgba(239, 68, 68, 0.08)', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#f87171', fontSize: '0.78rem' }}>
-              Unrecognized audio file format. Server validation will verify file headers.
+            <div style={{ marginTop: '10px', marginBottom: '16px', padding: '10px 14px', background: 'rgba(239, 68, 68, 0.08)', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.25)', color: '#f87171', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <AlertTriangle size={18} style={{ flexShrink: 0 }} />
+              <span>{fileWarning || 'Unrecognized audio format. Supported formats: .wav, .mp3, .m4a, .ogg.'}</span>
             </div>
           )}
 

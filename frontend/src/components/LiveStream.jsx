@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Radio, AlertTriangle, ShieldAlert, ShieldCheck, Cpu, Activity, Volume2, CheckCircle2 } from 'lucide-react';
+import { Mic, MicOff, Radio, AlertTriangle, ShieldAlert, ShieldCheck, Cpu, Activity, Volume2, CheckCircle2, Loader2, RefreshCw } from 'lucide-react';
 
 export default function LiveStream() {
   const [isListening, setIsListening] = useState(false);
-  const [streamStatus, setStreamStatus] = useState('idle'); // 'idle' | 'connecting' | 'listening' | 'error'
+  const [streamStatus, setStreamStatus] = useState('idle'); // 'idle' | 'connecting' | 'listening' | 'disconnected' | 'error'
   const [errorMessage, setErrorMessage] = useState(null);
+  const [errorType, setErrorType] = useState(null); // 'permission' | 'hardware' | 'disconnect' | 'generic'
   const [latestData, setLatestData] = useState(null);
   const [audioLevel, setAudioLevel] = useState(0);
+
+  const isListeningRef = useRef(false);
+  const streamStatusRef = useRef('idle');
 
   const socketRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -16,6 +20,16 @@ export default function LiveStream() {
   const canvasRef = useRef(null);
   const animationFrameRef = useRef(null);
   const sampleBufferRef = useRef([]);
+
+  const updateStreamStatus = (status) => {
+    streamStatusRef.current = status;
+    setStreamStatus(status);
+  };
+
+  const updateIsListening = (val) => {
+    isListeningRef.current = val;
+    setIsListening(val);
+  };
 
   // Clean up on unmount
   useEffect(() => {
@@ -59,10 +73,17 @@ export default function LiveStream() {
 
   const startStreaming = async () => {
     setErrorMessage(null);
-    setStreamStatus('connecting');
+    setErrorType(null);
+    setLatestData(null);
+    updateStreamStatus('connecting');
 
     try {
-      // 1. Request microphone access
+      // 1. Check browser mediaDevices support
+      if (!navigator?.mediaDevices?.getUserMedia) {
+        throw new Error('MEDIA_NOT_SUPPORTED');
+      }
+
+      // 2. Request microphone access
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -72,7 +93,7 @@ export default function LiveStream() {
       });
       mediaStreamRef.current = stream;
 
-      // 2. Establish WebSocket connection
+      // 3. Establish WebSocket connection
       const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const wsHost = window.location.hostname || 'localhost';
       const wsUrl = `${wsProtocol}//${wsHost}:8000/ws/stream`;
@@ -82,8 +103,8 @@ export default function LiveStream() {
       socketRef.current = ws;
 
       ws.onopen = () => {
-        setStreamStatus('listening');
-        setIsListening(true);
+        updateStreamStatus('listening');
+        updateIsListening(true);
       };
 
       ws.onmessage = (event) => {
@@ -98,13 +119,21 @@ export default function LiveStream() {
       ws.onerror = (err) => {
         console.error('WebSocket error:', err);
         cleanupResources();
-        setStreamStatus('error');
-        setErrorMessage('WebSocket connection failed. Ensure backend is running on port 8000.');
+        updateStreamStatus('error');
+        setErrorType('disconnect');
+        setErrorMessage('WebSocket connection failed. Ensure backend server is running on port 8000.');
       };
 
-      ws.onclose = () => {
-        if (isListening) {
-          stopStreaming();
+      ws.onclose = (event) => {
+        if (isListeningRef.current || streamStatusRef.current === 'connecting' || streamStatusRef.current === 'listening') {
+          cleanupResources();
+          if (event.code === 1000) {
+            updateStreamStatus('idle');
+          } else {
+            updateStreamStatus('disconnected');
+            setErrorType('disconnect');
+            setErrorMessage('WebSocket stream disconnected from server. Check that backend is running on port 8000.');
+          }
         }
       };
 
@@ -201,17 +230,25 @@ export default function LiveStream() {
     } catch (err) {
       console.error('Microphone initialization error:', err);
       cleanupResources();
-      setStreamStatus('error');
+      updateStreamStatus('error');
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        setErrorMessage('Microphone access denied. Please allow microphone permissions in your browser settings to use live streaming mode.');
+        setErrorType('permission');
+        setErrorMessage('Microphone access was denied. Browser permissions must be granted to stream live audio.');
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        setErrorType('hardware');
+        setErrorMessage('No microphone device was detected on your system. Please connect an audio input device.');
+      } else if (err.message === 'MEDIA_NOT_SUPPORTED') {
+        setErrorType('hardware');
+        setErrorMessage('Microphone access requires a secure context (HTTPS or localhost).');
       } else {
-        setErrorMessage(`Microphone error: ${err.message || 'Unable to access audio input'}`);
+        setErrorType('generic');
+        setErrorMessage(`Microphone setup error: ${err.message || 'Unable to access audio input'}`);
       }
     }
   };
 
   const cleanupResources = () => {
-    setIsListening(false);
+    updateIsListening(false);
 
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
@@ -246,7 +283,9 @@ export default function LiveStream() {
 
   const stopStreaming = () => {
     cleanupResources();
-    setStreamStatus('idle');
+    updateStreamStatus('idle');
+    setErrorMessage(null);
+    setErrorType(null);
   };
 
   const isFake = latestData?.label === 'likely_ai_generated';
@@ -275,13 +314,84 @@ export default function LiveStream() {
           </span>
         </div>
 
-        {/* Error Alert */}
+        {/* Error Alert Banner */}
         {errorMessage && (
-          <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', padding: '12px 14px', marginBottom: '16px', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-            <AlertTriangle size={18} color="#ef4444" style={{ flexShrink: 0, marginTop: '2px' }} />
-            <div>
-              <p style={{ fontSize: '0.85rem', fontWeight: '600', color: '#f87171' }}>Microphone Error</p>
-              <p style={{ fontSize: '0.8rem', color: '#cbd5e1', marginTop: '2px' }}>{errorMessage}</p>
+          <div
+            style={{
+              background: errorType === 'disconnect' ? 'rgba(245, 158, 11, 0.08)' : 'rgba(239, 68, 68, 0.08)',
+              border: `1px solid ${errorType === 'disconnect' ? 'rgba(245, 158, 11, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+              borderRadius: '10px',
+              padding: '16px',
+              marginBottom: '18px'
+            }}
+          >
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <AlertTriangle
+                size={22}
+                color={errorType === 'disconnect' ? '#f59e0b' : '#ef4444'}
+                style={{ flexShrink: 0, marginTop: '2px' }}
+              />
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <h4 style={{ fontSize: '0.92rem', fontWeight: '700', color: errorType === 'disconnect' ? '#fbbf24' : '#f87171' }}>
+                    {errorType === 'permission'
+                      ? 'Microphone Permission Denied'
+                      : errorType === 'disconnect'
+                      ? 'WebSocket Disconnected'
+                      : errorType === 'hardware'
+                      ? 'Audio Input Device Error'
+                      : 'Live Stream Error'}
+                  </h4>
+                  <span
+                    style={{
+                      fontSize: '0.68rem',
+                      fontWeight: '700',
+                      color: errorType === 'disconnect' ? '#fbbf24' : '#f87171',
+                      background: errorType === 'disconnect' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                      padding: '2px 8px',
+                      borderRadius: '4px'
+                    }}
+                  >
+                    {errorType?.toUpperCase()}
+                  </span>
+                </div>
+                <p style={{ fontSize: '0.84rem', color: '#cbd5e1', lineHeight: '1.5' }}>
+                  {errorMessage}
+                </p>
+
+                {errorType === 'permission' && (
+                  <div style={{ marginTop: '10px', fontSize: '0.78rem', color: '#94a3b8', background: '#090d16', padding: '10px 12px', borderRadius: '6px', border: '1px solid #1e293b' }}>
+                    <strong style={{ color: '#f1f5f9' }}>To grant permission:</strong>
+                    <ol style={{ margin: '6px 0 0 18px', padding: 0 }}>
+                      <li>Click the tune/padlock icon next to the URL in your browser address bar.</li>
+                      <li>Toggle <strong>Microphone</strong> to <strong>Allow</strong>.</li>
+                      <li>Click <strong>Retry Microphone Access</strong> below.</li>
+                    </ol>
+                  </div>
+                )}
+
+                <div style={{ marginTop: '12px' }}>
+                  <button
+                    onClick={startStreaming}
+                    style={{
+                      background: errorType === 'disconnect' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                      border: `1px solid ${errorType === 'disconnect' ? '#f59e0b' : '#ef4444'}`,
+                      color: '#f8fafc',
+                      padding: '6px 14px',
+                      borderRadius: '6px',
+                      fontSize: '0.8rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <RefreshCw size={14} />
+                    {errorType === 'permission' ? 'Retry Microphone Access' : 'Reconnect Live Stream'}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -330,11 +440,16 @@ export default function LiveStream() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 background: 'rgba(9, 13, 22, 0.85)',
-                backdropFilter: 'blur(2px)'
+                backdropFilter: 'blur(2px)',
+                padding: '16px'
               }}
             >
               <p style={{ fontSize: '0.85rem', color: '#64748b' }}>
-                Click "Start Listening" below to initiate real-time mic inspection
+                {streamStatus === 'connecting'
+                  ? 'Requesting microphone permissions and connecting to server...'
+                  : streamStatus === 'disconnected'
+                  ? 'Stream disconnected. Click "Reconnect Live Stream" to resume.'
+                  : 'Click "Start Live Listening" below to initiate real-time mic inspection'}
               </p>
             </div>
           )}
@@ -342,14 +457,23 @@ export default function LiveStream() {
 
         {/* Primary Toggle Action */}
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-          {!isListening ? (
+          {streamStatus === 'connecting' ? (
+            <button
+              disabled
+              className="btn-primary"
+              style={{ width: '100%', padding: '14px 24px', fontSize: '1rem', opacity: 0.8, cursor: 'wait' }}
+            >
+              <Loader2 size={20} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
+              Connecting to Live Stream...
+            </button>
+          ) : !isListening ? (
             <button
               onClick={startStreaming}
               className="btn-primary"
               style={{ width: '100%', padding: '14px 24px', fontSize: '1rem' }}
             >
               <Mic size={20} />
-              Start Live Listening
+              {streamStatus === 'disconnected' ? 'Reconnect Live Stream' : 'Start Live Listening'}
             </button>
           ) : (
             <button
@@ -390,7 +514,22 @@ export default function LiveStream() {
               Real-Time Verdict
             </span>
             <div style={{ marginTop: '6px' }}>
-              {!latestData ? (
+              {streamStatus === 'connecting' ? (
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(6, 182, 212, 0.1)', color: '#38bdf8', padding: '6px 14px', borderRadius: '9999px', fontSize: '0.82rem', fontWeight: '600', border: '1px solid rgba(6, 182, 212, 0.25)' }}>
+                  <Loader2 size={16} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
+                  <span>CONNECTING...</span>
+                </div>
+              ) : streamStatus === 'disconnected' ? (
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(245, 158, 11, 0.12)', color: '#fbbf24', padding: '6px 14px', borderRadius: '9999px', fontSize: '0.82rem', fontWeight: '600', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                  <AlertTriangle size={16} />
+                  <span>STREAM DISCONNECTED</span>
+                </div>
+              ) : isListening && !latestData ? (
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(6, 182, 212, 0.12)', color: '#38bdf8', padding: '6px 14px', borderRadius: '9999px', fontSize: '0.82rem', fontWeight: '600', border: '1px solid rgba(6, 182, 212, 0.3)' }}>
+                  <Activity size={16} className="animate-pulse" />
+                  <span>BUFFERING FIRST CHUNK (~1.5s)</span>
+                </div>
+              ) : !latestData ? (
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#1e293b', color: '#94a3b8', padding: '6px 14px', borderRadius: '9999px', fontSize: '0.82rem', fontWeight: '600' }}>
                   AWAITING LIVE STREAM
                 </div>
@@ -418,7 +557,7 @@ export default function LiveStream() {
                   cy="50"
                   r="45"
                   fill="transparent"
-                  stroke={latestData ? verdictColor : '#334155'}
+                  stroke={latestData ? verdictColor : isListening ? '#06b6d4' : '#334155'}
                   strokeWidth="10"
                   strokeDasharray="283"
                   strokeDashoffset={latestData ? strokeDashoffset : 283}
@@ -433,13 +572,13 @@ export default function LiveStream() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '1rem',
+                  fontSize: latestData ? '1rem' : '0.85rem',
                   fontWeight: '800',
-                  color: latestData ? verdictColor : '#64748b',
+                  color: latestData ? verdictColor : isListening ? '#38bdf8' : '#64748b',
                   fontFamily: "'JetBrains Mono', monospace"
                 }}
               >
-                {latestData ? `${rollingScorePercent}%` : '--'}
+                {latestData ? `${rollingScorePercent}%` : isListening ? '...' : '--'}
               </div>
             </div>
 
@@ -448,7 +587,11 @@ export default function LiveStream() {
                 Rolling Avg Score
               </div>
               <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#f1f5f9' }}>
-                {latestData ? (isFake ? 'AI Generated Stream' : 'Live Natural Speech') : '5-Chunk Window'}
+                {latestData
+                  ? (isFake ? 'AI Generated Stream' : 'Live Natural Speech')
+                  : isListening
+                  ? 'Buffering Window...'
+                  : '5-Chunk Window'}
               </div>
             </div>
           </div>
@@ -520,11 +663,13 @@ export default function LiveStream() {
               ))}
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', color: '#6ee7b7', padding: '12px 14px', borderRadius: '8px', fontSize: '0.85rem' }}>
-              <CheckCircle2 size={18} color="#10b981" style={{ flexShrink: 0 }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: isListening ? 'rgba(6, 182, 212, 0.08)' : 'rgba(16, 185, 129, 0.08)', border: isListening ? '1px solid rgba(6, 182, 212, 0.25)' : '1px solid rgba(16, 185, 129, 0.25)', color: isListening ? '#38bdf8' : '#6ee7b7', padding: '12px 14px', borderRadius: '8px', fontSize: '0.85rem' }}>
+              <CheckCircle2 size={18} color={isListening ? '#06b6d4' : '#10b981'} style={{ flexShrink: 0 }} />
               <span>
                 {latestData
                   ? 'No unnatural synthetic anomalies detected in live microphone speech.'
+                  : isListening
+                  ? 'Microphone active. Evaluating speech acoustics in rolling 1.5s windows.'
                   : 'Start live listening to monitor incoming vocal tract physics in real time.'}
               </span>
             </div>
