@@ -134,15 +134,10 @@ def analyze_audio(waveform: np.ndarray, sample_rate: int) -> Dict[str, Any]:
         logits = model(**inputs).logits
         probabilities = torch.softmax(logits, dim=-1)[0]
 
-    # Map labels: config.id2label -> {"0": "fake", "1": "real"}
-    fake_idx = 0
-    id2label = getattr(model.config, "id2label", {0: "fake", 1: "real"})
-    for idx_key, lbl in id2label.items():
-        if "fake" in str(lbl).lower() or "spoof" in str(lbl).lower():
-            fake_idx = int(idx_key)
-            break
-
-    fake_prob = float(probabilities[fake_idx].item())
+    # In MelodyMachine/Deepfake-audio-detection-V2:
+    # Index 1 corresponds to AI-generated / deepfake speech
+    # Index 0 corresponds to genuine human speech
+    fake_prob = float(probabilities[1].item())
     model_score = round(fake_prob, 2)
 
     # 3. Run Heuristic Explainability Layer (pitch jitter, spectral flatness, pause patterns)
