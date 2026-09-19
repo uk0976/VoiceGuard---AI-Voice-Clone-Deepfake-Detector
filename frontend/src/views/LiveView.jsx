@@ -312,8 +312,17 @@ export default function LiveView() {
   };
 
   const isFake = latestData?.label === 'likely_ai_generated';
-  const rollingScorePercent = latestData ? Math.round((latestData.rolling_avg_score || 0) * 100) : 0;
   const chunkScorePercent = latestData ? Math.round((latestData.chunk_score || 0) * 100) : 0;
+  // Synthetic probability on the 0% (Human) to 100% (AI) spectrum bar
+  const syntheticPercent = latestData ? Math.round((latestData.rolling_avg_score || 0) * 100) : 0;
+  // Decision confidence in the determined verdict
+  const confidencePercent = latestData
+    ? latestData.confidence !== undefined
+      ? Math.round(latestData.confidence * 100)
+      : isFake
+      ? syntheticPercent
+      : 100 - syntheticPercent
+    : 0;
   const flags = latestData?.heuristic_flags || [];
 
   return (
@@ -517,7 +526,7 @@ export default function LiveView() {
 
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
               <span className="mono" style={{ fontSize: '2rem', fontWeight: '700', color: latestData ? (isFake ? 'var(--color-ai)' : 'var(--color-human)') : 'var(--text-muted)' }}>
-                {latestData ? `${rollingScorePercent}%` : '--'}
+                {latestData ? `${confidencePercent}%` : '--'}
               </span>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                 confidence
@@ -525,12 +534,12 @@ export default function LiveView() {
             </div>
           </div>
 
-          {/* Spectrum Bar */}
+          {/* Spectrum Bar: Left is Human (0% Synthetic), Right is AI (100% Synthetic) */}
           <div className="spectrum-bar">
             <div
               className="spectrum-marker"
               style={{
-                left: latestData ? `${Math.max(4, Math.min(96, isFake ? rollingScorePercent : 100 - rollingScorePercent))}%` : '50%'
+                left: latestData ? `${Math.max(4, Math.min(96, syntheticPercent))}%` : '50%'
               }}
             />
           </div>

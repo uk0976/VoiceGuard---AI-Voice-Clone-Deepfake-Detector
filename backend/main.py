@@ -62,6 +62,7 @@ class AnalysisResponse(BaseModel):
     model_score: float
     heuristic_flags: List[str]
     metrics: Optional[Dict[str, Any]] = None
+    synthetic_score: Optional[float] = None
 
 
 @app.get("/")
@@ -187,7 +188,8 @@ async def analyze_file(file: UploadFile = File(...)):
             confidence=result["confidence"],
             model_score=result["model_score"],
             heuristic_flags=result["heuristic_flags"],
-            metrics=result.get("metrics")
+            metrics=result.get("metrics"),
+            synthetic_score=result.get("synthetic_score")
         )
 
     except HTTPException:
@@ -297,9 +299,11 @@ async def websocket_stream(websocket: WebSocket):
                 if rms < 0.0035 and peak < 0.015:
                     rolling_avg_score = round(sum(rolling_buffer) / len(rolling_buffer), 2) if rolling_buffer else 0.0
                     label = "likely_ai_generated" if rolling_avg_score >= 0.50 else "likely_real"
+                    confidence = rolling_avg_score if label == "likely_ai_generated" else round(1.0 - rolling_avg_score, 2)
                     response_payload = {
                         "chunk_score": 0.0,
                         "rolling_avg_score": rolling_avg_score,
+                        "confidence": confidence,
                         "label": label,
                         "heuristic_flags": [],
                         "metrics": {
@@ -317,16 +321,18 @@ async def websocket_stream(websocket: WebSocket):
                 # Run shared analyze_audio() engine on active voice
                 result = analyze_audio(waveform, sr)
 
-                chunk_score = result["confidence"]
+                chunk_score = result.get("synthetic_score", result.get("confidence", 0.0))
                 rolling_buffer.append(chunk_score)
                 rolling_avg_score = round(sum(rolling_buffer) / len(rolling_buffer), 2)
 
-                # Smoothed verdict label
+                # Smoothed verdict label and verdict confidence
                 label = "likely_ai_generated" if rolling_avg_score >= 0.50 else "likely_real"
+                confidence = rolling_avg_score if label == "likely_ai_generated" else round(1.0 - rolling_avg_score, 2)
 
                 response_payload = {
                     "chunk_score": chunk_score,
                     "rolling_avg_score": rolling_avg_score,
+                    "confidence": confidence,
                     "label": label,
                     "heuristic_flags": result["heuristic_flags"],
                     "metrics": result.get("metrics")

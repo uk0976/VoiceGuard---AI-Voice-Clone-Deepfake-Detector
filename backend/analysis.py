@@ -8,6 +8,7 @@ Integrates:
 import os
 import sys
 import logging
+import threading
 from typing import Dict, Any, List
 import numpy as np
 
@@ -31,6 +32,7 @@ logger = logging.getLogger("voiceguard.analysis")
 _FEATURE_EXTRACTOR = None
 _MODEL = None
 _DEVICE = None
+_MODEL_LOCK = threading.Lock()
 MODEL_NAME = "MelodyMachine/Deepfake-audio-detection-V2"
 TARGET_SAMPLE_RATE = 16000
 
@@ -38,26 +40,30 @@ TARGET_SAMPLE_RATE = 16000
 def get_model_and_extractor():
     """
     Lazy load the Hugging Face feature extractor and model.
-    Caches loaded instances in memory for fast subsequent inferences.
+    Thread-safe and caches loaded instances in memory for fast subsequent inferences.
     """
     global _FEATURE_EXTRACTOR, _MODEL, _DEVICE
 
     if _MODEL is not None and _FEATURE_EXTRACTOR is not None:
         return _FEATURE_EXTRACTOR, _MODEL, _DEVICE
 
-    import torch
-    from transformers import AutoFeatureExtractor, AutoModelForAudioClassification
+    with _MODEL_LOCK:
+        if _MODEL is not None and _FEATURE_EXTRACTOR is not None:
+            return _FEATURE_EXTRACTOR, _MODEL, _DEVICE
 
-    _DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    logger.info(f"Loading classifier '{MODEL_NAME}' on device: {_DEVICE}...")
+        import torch
+        from transformers import AutoFeatureExtractor, AutoModelForAudioClassification
 
-    _FEATURE_EXTRACTOR = AutoFeatureExtractor.from_pretrained(MODEL_NAME)
-    _MODEL = AutoModelForAudioClassification.from_pretrained(MODEL_NAME)
+        _DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        logger.info(f"Loading classifier '{MODEL_NAME}' on device: {_DEVICE}...")
 
-    _MODEL.to(_DEVICE)
-    _MODEL.eval()
-    logger.info(f"Model '{MODEL_NAME}' loaded successfully.")
-    return _FEATURE_EXTRACTOR, _MODEL, _DEVICE
+        _FEATURE_EXTRACTOR = AutoFeatureExtractor.from_pretrained(MODEL_NAME)
+        _MODEL = AutoModelForAudioClassification.from_pretrained(MODEL_NAME)
+
+        _MODEL.to(_DEVICE)
+        _MODEL.eval()
+        logger.info(f"Model '{MODEL_NAME}' loaded successfully.")
+        return _FEATURE_EXTRACTOR, _MODEL, _DEVICE
 
 
 def preprocess_audio(waveform: np.ndarray, sample_rate: int) -> np.ndarray:
@@ -97,12 +103,14 @@ def analyze_audio(waveform: np.ndarray, sample_rate: int) -> Dict[str, Any]:
     1. Pretrained Hugging Face audio classifier (model_score)
     2. Real signal-processing heuristics (pitch jitter, spectral flatness, pause patterns)
     
-    Returns JSON dictionary adhering strictly to the Section 5 API contract:
+    Returns:
     {
       "label": "likely_ai_generated" | "likely_real",
-      "confidence": float,
-      "model_score": float,
-      "heuristic_flags": list[str]
+      "confidence": float,           # Decision confidence in the verdict (0.50 - 1.00)
+      "synthetic_score": float,      # Raw synthetic probability (0.00 - 1.00)
+      "model_score": float,          # Neural model prediction
+      "heuristic_flags": list[str],
+      "metrics": dict
     }
     """
     import torch
@@ -114,7 +122,8 @@ def analyze_audio(waveform: np.ndarray, sample_rate: int) -> Dict[str, Any]:
     if len(waveform) == 0 or np.all(waveform == 0) or (rms < 0.0035 and peak < 0.015):
         return {
             "label": "likely_real",
-            "confidence": 0.0,
+            "confidence": 1.0,
+            "synthetic_score": 0.0,
             "model_score": 0.0,
             "heuristic_flags": [],
             "metrics": {
@@ -139,38 +148,38 @@ def analyze_audio(waveform: np.ndarray, sample_rate: int) -> Dict[str, Any]:
         return_tensors="pt",
         padding=True
     )
-    inputs = {k: v.to(device) for k, v in inputs.items()}
 
     with torch.no_grad():
+        inputs = {k: v.to(device) for k, v in inputs.items()}
         logits = model(**inputs).logits
         probabilities = torch.softmax(logits, dim=-1)[0]
+        # In MelodyMachine/Deepfake-audio-detection-V2:
+        # Index 0 is Real, Index 1 is Fake (AI-generated)
+        model_score = round(float(probabilities[1].item()), 4)
 
-    # In MelodyMachine/Deepfake-audio-detection-V2:
-    # Index 1 corresponds to AI-generated / deepfake speech
-    # Index 0 corresponds to genuine human speech
-    fake_prob = float(probabilities[1].item())
-    model_score = round(fake_prob, 2)
-
-    # 3. Run Heuristic Explainability Layer (pitch jitter, spectral flatness, pause patterns)
+    # 3. Compute heuristic signal scores
     heuristics_result = compute_heuristics(processed_audio, TARGET_SAMPLE_RATE)
-    heuristic_score = heuristics_result["heuristic_score"]
-    heuristic_flags: List[str] = heuristics_result["flags"]
+    heuristic_score = heuristics_result.get("heuristic_score", heuristics_result.get("score", 0.0))
+    heuristic_flags: List[str] = heuristics_result.get("flags", [])
 
-    # 4. Merge model_score and heuristic_score into final confidence
+    # 4. Fusion logic:
+    # Blend neural score and heuristics
     if model_score >= 0.50:
-        confidence = round(0.70 * model_score + 0.30 * max(model_score, heuristic_score), 2)
+        synthetic_score = round(0.70 * model_score + 0.30 * max(model_score, heuristic_score), 2)
     elif heuristic_score >= 0.80 and model_score >= 0.35:
-        confidence = round(0.55 * heuristic_score + 0.45 * model_score, 2)
+        synthetic_score = round(0.55 * heuristic_score + 0.45 * model_score, 2)
     else:
         # Neural model indicates natural human speech (model_score < 0.50)
-        confidence = round(0.80 * model_score + 0.20 * heuristic_score, 2)
+        synthetic_score = round(0.80 * model_score + 0.20 * heuristic_score, 2)
 
-    confidence = max(0.0, min(1.0, confidence))
-    label = "likely_ai_generated" if confidence >= 0.50 else "likely_real"
+    synthetic_score = max(0.0, min(1.0, synthetic_score))
+    label = "likely_ai_generated" if synthetic_score >= 0.50 else "likely_real"
+    verdict_confidence = synthetic_score if label == "likely_ai_generated" else round(1.0 - synthetic_score, 2)
 
     return {
         "label": label,
-        "confidence": confidence,
+        "confidence": verdict_confidence,
+        "synthetic_score": synthetic_score,
         "model_score": model_score,
         "heuristic_flags": heuristic_flags,
         "metrics": heuristics_result.get("metrics", {})

@@ -9,7 +9,7 @@ export default function HistoryView({ onNavigate, reports = [] }) {
     id: rep.id?.replace('REP', 'AUD') || 'AUD-9000',
     file: rep.filename || 'recording.wav',
     result: rep.label === 'likely_ai_generated' ? 'AI GENERATED' : 'HUMAN',
-    confidence: `${Math.round((rep.confidence || 0) * 100)}%`,
+    confidence: `${Math.round((rep.label !== 'likely_ai_generated' && (rep.confidence || 0) < 0.5 ? 1 - (rep.confidence || 0) : (rep.confidence || 0)) * 100)}%`,
     duration: rep.duration || '--',
     timestamp: rep.timestamp || '--',
     hash: '8f434346...' + (rep.filename || '').slice(0, 4)

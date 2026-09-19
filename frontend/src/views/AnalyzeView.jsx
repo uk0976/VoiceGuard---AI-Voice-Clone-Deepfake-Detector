@@ -167,7 +167,30 @@ export default function AnalyzeView({ onAnalyze, isLoading, error, result, activ
   }, [currentTime, duration, audioUrl]);
 
   const isFake = result?.label === 'likely_ai_generated';
-  const confidencePercent = result ? Math.round((result.confidence || 0) * 100) : 0;
+  // Synthetic probability on the 0% (Human) to 100% (AI) spectrum
+  const syntheticPercent = result
+    ? Math.round(
+        (result.synthetic_score !== undefined
+          ? result.synthetic_score
+          : isFake
+          ? result.confidence
+          : (result.confidence <= 0.5 ? result.confidence : 1.0 - result.confidence)) * 100
+      )
+    : 0;
+  // Decision confidence in the determined verdict
+  const confidencePercent = result
+    ? Math.round(
+        (result.confidence !== undefined
+          ? (result.synthetic_score !== undefined
+              ? result.confidence
+              : result.confidence >= 0.5
+              ? result.confidence
+              : 1.0 - result.confidence)
+          : isFake
+          ? syntheticPercent / 100
+          : 1.0 - syntheticPercent / 100) * 100
+      )
+    : 0;
   const modelPercent = result ? Math.round((result.model_score || 0) * 100) : 0;
   const flags = result?.heuristic_flags || [];
   const metrics = result?.metrics || null;
@@ -532,12 +555,12 @@ export default function AnalyzeView({ onAnalyze, isLoading, error, result, activ
               </div>
             </div>
 
-            {/* Horizontal Spectrum Bar */}
+            {/* Horizontal Spectrum Bar: Left is Human (0% Synthetic), Right is AI (100% Synthetic) */}
             <div className="spectrum-bar">
               <div
                 className="spectrum-marker"
                 style={{
-                  left: `${Math.max(4, Math.min(96, isFake ? confidencePercent : 100 - confidencePercent))}%`
+                  left: `${Math.max(4, Math.min(96, syntheticPercent))}%`
                 }}
               />
             </div>

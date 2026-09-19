@@ -173,7 +173,8 @@ export default function OverviewView({ onNavigate, onSelectDemoClip, reports = [
             <tbody>
               {recentAnalyses.map((item) => {
                 const isFake = item.label === 'likely_ai_generated';
-                const confPercent = Math.round((item.confidence || 0) * 100);
+                const rawConf = item.confidence || 0;
+                const confPercent = Math.round((!isFake && rawConf < 0.5 ? 1 - rawConf : rawConf) * 100);
                 const ext = (item.filename?.split('.').pop() || 'wav').toUpperCase();
 
                 return (

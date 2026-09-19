@@ -23,7 +23,8 @@ export function generateForensicPdf(reportData) {
   });
 
   const isFake = reportData.label === 'likely_ai_generated';
-  const confidencePercent = Math.round((reportData.confidence || 0) * 100);
+  const rawConf = reportData.confidence || 0;
+  const confidencePercent = Math.round((!isFake && rawConf < 0.5 ? 1 - rawConf : rawConf) * 100);
   const modelPercent = Math.round((reportData.model_score || 0) * 100);
   const flags = reportData.heuristic_flags || [];
   const metrics = reportData.metrics || {};

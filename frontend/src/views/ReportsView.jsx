@@ -146,7 +146,8 @@ export default function ReportsView({ reports = [], onDeleteReport, onClearRepor
             <tbody>
               {filteredReports.map((rep) => {
                 const isFake = rep.label === 'likely_ai_generated';
-                const confPercent = Math.round((rep.confidence || 0) * 100);
+                const rawConf = rep.confidence || 0;
+                const confPercent = Math.round((!isFake && rawConf < 0.5 ? 1 - rawConf : rawConf) * 100);
 
                 return (
                   <tr key={rep.id}>
