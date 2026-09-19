@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { UploadCloud, FileAudio, Play, X, Loader2, Sparkles, AlertTriangle } from 'lucide-react';
+import { UploadCloud, FileAudio, Play, X, Loader2, Sparkles, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 export default function FileUpload({ onAnalyze, isLoading, externalFile, onClear }) {
   const [dragActive, setDragActive] = useState(false);
@@ -17,7 +17,7 @@ export default function FileUpload({ onAnalyze, isLoading, externalFile, onClear
 
     const isAudio = file.type?.startsWith('audio/') || /\.(wav|mp3|m4a|ogg|flac|aac|wma)$/i.test(file.name || '');
     if (!isAudio) {
-      setFileWarning(`"${file.name}" is not an audio file. Supported formats: .wav, .mp3, .m4a, .ogg.`);
+      setFileWarning(`"${file.name}" is not a recognized audio format. Supported formats: .wav, .mp3, .m4a, .ogg.`);
       setAudioUrl(null);
     } else if (file.size === 0) {
       setFileWarning(`"${file.name}" is empty (0 bytes). Please choose a valid audio file.`);
@@ -82,7 +82,7 @@ export default function FileUpload({ onAnalyze, isLoading, externalFile, onClear
   };
 
   const handleSubmit = () => {
-    if (selectedFile && !isLoading) {
+    if (selectedFile && !isLoading && !fileWarning) {
       onAnalyze(selectedFile);
     }
   };
@@ -95,10 +95,16 @@ export default function FileUpload({ onAnalyze, isLoading, externalFile, onClear
 
   return (
     <div className="vg-card" style={{ width: '100%' }}>
+      {/* Header */}
       <div style={{ marginBottom: '18px' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#f8fafc' }}>Upload audio</h2>
-        <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '2px' }}>
-          Select a WAV, MP3, or M4A file to analyze for synthetic speech
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h2 style={{ fontSize: '1.125rem', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+            Audio File Inspection
+          </h2>
+          <span className="badge-neutral">Max 25MB</span>
+        </div>
+        <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+          Upload recorded speech to inspect vocal tract jitter, spectral consistency, and deepfake patterns.
         </p>
       </div>
 
@@ -113,90 +119,167 @@ export default function FileUpload({ onAnalyze, isLoading, externalFile, onClear
 
       {!selectedFile ? (
         <div
-          className={`dropzone ${dragActive ? 'active' : ''}`}
+          className={`dropzone-saas ${dragActive ? 'active' : ''}`}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
         >
-          <div style={{ display: 'inline-flex', padding: '16px', borderRadius: '50%', background: 'rgba(6, 182, 212, 0.08)', marginBottom: '14px', color: '#06b6d4' }}>
-            <UploadCloud size={34} />
+          <div
+            style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '10px',
+              backgroundColor: '#EFF6FF',
+              color: 'var(--primary-blue)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '14px'
+            }}
+          >
+            <UploadCloud size={26} />
           </div>
-          <h3 style={{ fontSize: '0.98rem', fontWeight: '600', color: '#e2e8f0', marginBottom: '6px' }}>
-            Drag and drop an audio file here
+
+          <h3 style={{ fontSize: '0.9375rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '4px' }}>
+            Drop your audio file here or <span style={{ color: 'var(--primary-blue)', textDecoration: 'underline' }}>browse</span>
           </h3>
-          <p style={{ fontSize: '0.84rem', color: '#64748b' }}>
-            or <span style={{ color: '#06b6d4', textDecoration: 'underline', fontWeight: '500' }}>browse from your device</span>
+
+          <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
+            Supports standard PCM WAV, MP3, M4A, or OGG
           </p>
-          <p style={{ fontSize: '0.75rem', color: '#475569', marginTop: '12px' }}>
-            Supports WAV, MP3, M4A, OGG up to 25MB
-          </p>
+
+          <div style={{ display: 'inline-flex', gap: '6px' }}>
+            <span style={{ fontSize: '0.6875rem', fontWeight: '500', color: 'var(--text-secondary)', backgroundColor: '#FFFFFF', border: '1px solid var(--border-subtle)', padding: '2px 8px', borderRadius: '4px' }}>
+              WAV
+            </span>
+            <span style={{ fontSize: '0.6875rem', fontWeight: '500', color: 'var(--text-secondary)', backgroundColor: '#FFFFFF', border: '1px solid var(--border-subtle)', padding: '2px 8px', borderRadius: '4px' }}>
+              MP3
+            </span>
+            <span style={{ fontSize: '0.6875rem', fontWeight: '500', color: 'var(--text-secondary)', backgroundColor: '#FFFFFF', border: '1px solid var(--border-subtle)', padding: '2px 8px', borderRadius: '4px' }}>
+              M4A
+            </span>
+            <span style={{ fontSize: '0.6875rem', fontWeight: '500', color: 'var(--text-secondary)', backgroundColor: '#FFFFFF', border: '1px solid var(--border-subtle)', padding: '2px 8px', borderRadius: '4px' }}>
+              OGG
+            </span>
+          </div>
         </div>
       ) : (
-        <div style={{ background: 'rgba(11, 18, 34, 0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.08)', borderTop: '1px solid rgba(255, 255, 255, 0.16)', borderRadius: '12px', padding: '18px', boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ padding: '10px', borderRadius: '8px', background: 'rgba(6, 182, 212, 0.12)', color: '#06b6d4' }}>
-                <FileAudio size={24} />
+        <div
+          style={{
+            backgroundColor: 'var(--bg-surface-subtle)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '10px',
+            padding: '16px'
+          }}
+        >
+          {/* File Info Row */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+              <div
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '8px',
+                  backgroundColor: '#EFF6FF',
+                  color: 'var(--primary-blue)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}
+              >
+                <FileAudio size={22} />
               </div>
-              <div>
-                <p style={{ fontWeight: '600', color: '#f1f5f9', fontSize: '0.95rem' }}>{selectedFile.name}</p>
-                <p style={{ fontSize: '0.75rem', color: '#64748b' }}>{formatFileSize(selectedFile.size)}</p>
+              <div style={{ minWidth: 0 }}>
+                <p style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {selectedFile.name}
+                </p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  {formatFileSize(selectedFile.size)}
+                </p>
               </div>
             </div>
+
             {!isLoading && (
               <button
                 onClick={handleClear}
-                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '6px', borderRadius: '6px', transition: 'color 150ms ease' }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  padding: '6px',
+                  borderRadius: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
                 title="Remove file"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             )}
           </div>
 
+          {/* Audio Preview Element */}
           {audioUrl ? (
-            <div style={{ marginTop: '12px', marginBottom: '18px' }}>
-              <audio controls src={audioUrl} style={{ width: '100%', height: '36px', borderRadius: '6px' }} />
+            <div style={{ marginBottom: '16px' }}>
+              <audio
+                controls
+                src={audioUrl}
+                style={{
+                  width: '100%',
+                  height: '36px',
+                  borderRadius: '6px',
+                  outline: 'none'
+                }}
+              />
             </div>
           ) : (
-            <div style={{ marginTop: '10px', marginBottom: '16px', padding: '10px 14px', background: 'rgba(239, 68, 68, 0.08)', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.25)', color: '#f87171', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div
+              style={{
+                marginBottom: '16px',
+                padding: '10px 14px',
+                backgroundColor: 'var(--ai-red-bg)',
+                borderRadius: '8px',
+                border: '1px solid var(--ai-red-border)',
+                color: '#991B1B',
+                fontSize: '0.8125rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+              }}
+            >
               <AlertTriangle size={18} style={{ flexShrink: 0 }} />
               <span>{fileWarning || 'Unrecognized audio format. Supported formats: .wav, .mp3, .m4a, .ogg.'}</span>
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '16px' }}>
+          {/* Action Footer */}
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', paddingTop: '10px', borderTop: '1px solid var(--border-subtle)' }}>
             <button
               onClick={handleClear}
               disabled={isLoading}
-              style={{
-                background: 'rgba(255, 255, 255, 0.04)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: '#cbd5e1',
-                padding: '10px 18px',
-                borderRadius: '8px',
-                fontWeight: '500',
-                cursor: 'pointer',
-                transition: 'all 150ms ease'
-              }}
+              className="btn-secondary"
             >
               Change file
             </button>
+
             <button
               className="btn-primary"
               onClick={handleSubmit}
-              disabled={isLoading}
+              disabled={isLoading || !!fileWarning}
             >
               {isLoading ? (
                 <>
-                  <Loader2 size={18} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
-                  Analyzing...
+                  <Loader2 size={16} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
+                  Analyzing audio...
                 </>
               ) : (
                 <>
-                  <Sparkles size={18} />
+                  <Sparkles size={16} />
                   Analyze audio
                 </>
               )}

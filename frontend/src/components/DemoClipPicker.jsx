@@ -14,7 +14,7 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
       type: 'real',
       label: 'Real Voice 1',
       duration: '13.8s',
-      description: 'Natural speech with healthy pitch fluctuation and breath pauses.'
+      description: 'Natural human speech with healthy pitch variation and respiratory pauses.'
     },
     {
       id: 'real_2',
@@ -22,7 +22,7 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
       type: 'real',
       label: 'Real Voice 2',
       duration: '12.0s',
-      description: 'Expressive human cadence with rich acoustic harmonic decay.'
+      description: 'Dynamic conversational cadence with natural acoustic harmonic decay.'
     },
     {
       id: 'real_3',
@@ -30,7 +30,7 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
       type: 'real',
       label: 'Real Voice 3',
       duration: '6.6s',
-      description: 'Short spoken phrase recorded under standard room acoustics.'
+      description: 'Standard spoken phrase recorded in an uncompressed room environment.'
     }
   ];
 
@@ -41,7 +41,7 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
       type: 'fake',
       label: 'AI Voice 1',
       duration: '7.4s',
-      description: 'Neural voice clone generated from a cloned speaker model.'
+      description: 'Neural voice clone generated from a cloned speaker foundation model.'
     },
     {
       id: 'fake_2',
@@ -49,7 +49,7 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
       type: 'fake',
       label: 'AI Voice 2',
       duration: '8.7s',
-      description: 'Synthesized voice displaying unnaturally uniform pitch.'
+      description: 'Synthesized voice displaying unnaturally uniform pitch & phase continuity.'
     },
     {
       id: 'fake_3',
@@ -57,19 +57,17 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
       type: 'fake',
       label: 'AI Voice 3',
       duration: '2.4s',
-      description: 'Short synthetic phrase with vocoder phase stability.'
+      description: 'Short synthetic phrase exhibiting typical vocoder spectral flatness.'
     }
   ];
 
   const getAudioUrl = (filename) => {
-    // Relative URL works through Vite dev proxy (/demo_clips -> http://localhost:8000/demo_clips)
     return `/demo_clips/${filename}`;
   };
 
   const togglePlay = (clip, e) => {
     e.stopPropagation();
 
-    // Pause current if another is playing
     if (playingId && playingId !== clip.id && audioElements[playingId]) {
       audioElements[playingId].pause();
       audioElements[playingId].currentTime = 0;
@@ -103,7 +101,6 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
     setLoadingClipId(clip.id);
 
     try {
-      // 1. Fetch audio blob from server
       let res;
       try {
         res = await fetch(getAudioUrl(clip.filename));
@@ -115,7 +112,6 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
       const blob = await res.blob();
       const file = new File([blob], clip.filename, { type: 'audio/wav' });
 
-      // 2. Dispatch through exact same /analyze flow as manual upload
       await onSelectClip(file, clip);
     } catch (err) {
       console.error('Failed to load demo clip for analysis:', err);
@@ -134,70 +130,61 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
     return (
       <div
         key={clip.id}
-        className="interactive-card"
+        className="vg-card-interactive"
         onClick={() => handleTest(clip)}
         style={{
           backgroundColor: isSelected
-            ? (isReal ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)')
-            : 'rgba(13, 20, 37, 0.65)',
-          border: isSelected
-            ? (isReal ? '1px solid #10b981' : '1px solid #ef4444')
-            : '1px solid rgba(255, 255, 255, 0.08)',
-          borderTop: isSelected
-            ? (isReal ? '1px solid #34d399' : '1px solid #f87171')
-            : '1px solid rgba(255, 255, 255, 0.14)',
-          borderRadius: '11px',
-          padding: '14px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          cursor: isLoading ? 'not-allowed' : 'pointer',
-          position: 'relative',
+            ? (isReal ? 'var(--authentic-green-bg)' : 'var(--ai-red-bg)')
+            : '#FFFFFF',
+          borderColor: isSelected
+            ? (isReal ? 'var(--authentic-green)' : 'var(--ai-red)')
+            : 'var(--border-subtle)',
           boxShadow: isSelected
-            ? (isReal ? '0 0 20px rgba(16, 185, 129, 0.25)' : '0 0 20px rgba(239, 68, 68, 0.25)')
-            : '0 2px 8px rgba(0, 0, 0, 0.2)'
+            ? (isReal ? '0 0 0 1px var(--authentic-green)' : '0 0 0 1px var(--ai-red)')
+            : 'var(--shadow-sm)'
         }}
       >
-        <div>
-          {/* Header Row: Title + Duration + Play/Pause Button */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontWeight: '700', fontSize: '0.92rem', color: '#f8fafc' }}>
-                {clip.label}
-              </span>
-              <span style={{ fontSize: '0.7rem', color: '#64748b', background: 'rgba(255, 255, 255, 0.05)', padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                {clip.duration}
-              </span>
-            </div>
-
-            <button
-              onClick={(e) => togglePlay(clip, e)}
-              style={{
-                background: isAudioPlaying ? (isReal ? '#10b981' : '#ef4444') : '#1e293b',
-                color: isAudioPlaying ? '#ffffff' : '#94a3b8',
-                border: 'none',
-                borderRadius: '50%',
-                width: '28px',
-                height: '28px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                flexShrink: 0
-              }}
-              title={isAudioPlaying ? 'Pause preview' : 'Listen to audio preview'}
-            >
-              {isAudioPlaying ? <Pause size={13} /> : <Play size={13} style={{ marginLeft: '1px' }} />}
-            </button>
+        {/* Card Header: Title + Duration + Preview Play Button */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontWeight: '700', fontSize: '0.875rem', color: 'var(--text-primary)' }}>
+              {clip.label}
+            </span>
+            <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', backgroundColor: 'var(--bg-surface-subtle)', padding: '1px 6px', borderRadius: '4px', border: '1px solid var(--border-subtle)' }}>
+              {clip.duration}
+            </span>
           </div>
 
-          <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: '1.45', marginBottom: '12px' }}>
-            {clip.description}
-          </p>
+          <button
+            onClick={(e) => togglePlay(clip, e)}
+            style={{
+              backgroundColor: isAudioPlaying
+                ? (isReal ? 'var(--authentic-green)' : 'var(--ai-red)')
+                : 'var(--bg-surface-subtle)',
+              color: isAudioPlaying ? '#FFFFFF' : 'var(--text-secondary)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: '50%',
+              width: '28px',
+              height: '28px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              flexShrink: 0,
+              transition: 'all 0.15s ease'
+            }}
+            title={isAudioPlaying ? 'Pause preview' : 'Play audio preview'}
+          >
+            {isAudioPlaying ? <Pause size={12} /> : <Play size={12} style={{ marginLeft: '1px' }} />}
+          </button>
         </div>
 
-        {/* Action Button */}
+        {/* Description */}
+        <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.45, marginBottom: '12px' }}>
+          {clip.description}
+        </p>
+
+        {/* Analyze Action Button */}
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -205,42 +192,40 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
           }}
           disabled={isLoading}
           style={{
-            background: isSelected
-              ? (isReal ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)')
-              : 'rgba(255, 255, 255, 0.04)',
-            color: isSelected
-              ? (isReal ? '#34d399' : '#f87171')
-              : '#cbd5e1',
+            backgroundColor: isSelected
+              ? (isReal ? 'var(--authentic-green)' : 'var(--ai-red)')
+              : 'var(--bg-surface-subtle)',
+            color: isSelected ? '#FFFFFF' : 'var(--text-primary)',
             border: isSelected
-              ? (isReal ? '1px solid #10b981' : '1px solid #ef4444')
-              : '1px solid #334155',
-            padding: '7px 12px',
+              ? '1px solid transparent'
+              : '1px solid var(--border-subtle)',
+            padding: '6px 12px',
             borderRadius: '6px',
-            fontSize: '0.78rem',
+            fontSize: '0.75rem',
             fontWeight: '600',
             cursor: isLoading ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '6px',
-            transition: 'all 0.2s ease',
-            width: '100%'
+            width: '100%',
+            transition: 'all 0.15s ease'
           }}
         >
           {isAnalyzingThis ? (
             <>
-              <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />
-              Analyzing clip...
+              <Loader2 size={13} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
+              Analyzing audio...
             </>
           ) : isSelected ? (
             <>
-              <AudioWaveform size={14} />
-              Loaded in analyzer
+              <CheckCircle2 size={13} />
+              Active in Inspector
             </>
           ) : (
             <>
-              <AudioWaveform size={14} />
-              Analyze clip
+              <AudioWaveform size={13} />
+              Inspect Clip
             </>
           )}
         </button>
@@ -249,52 +234,40 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
   };
 
   return (
-    <div
-      className="vg-card"
-      style={{
-        width: '100%',
-        marginTop: '28px'
-      }}
-    >
-      {/* Header with Visual Secondary Cue */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', flexWrap: 'wrap', gap: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(6, 182, 212, 0.12)', color: '#06b6d4', boxShadow: '0 0 12px rgba(6, 182, 212, 0.2)' }}>
-            <Sparkles size={18} />
-          </div>
-          <div>
-            <h3 style={{ fontSize: '1.02rem', fontWeight: '700', color: '#f8fafc' }}>
-              Try a demo clip
+    <div id="demo-clips-section" className="vg-card" style={{ width: '100%', marginTop: '32px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+              Reference Benchmark Clips
             </h3>
-            <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '2px' }}>
-              Click any sample to evaluate it instantly with the detection pipeline.
-            </p>
+            <span className="badge-neutral">6 Audio Samples</span>
           </div>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+            Click any reference clip below to inspect with the dual-engine pipeline, or preview audio playback.
+          </p>
         </div>
       </div>
 
-      {/* Two Visually Grouped Sections: Authentic Human vs AI-Generated */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px' }}>
-        {/* Section 1: Authentic Human Voices */}
+      {/* Two Column Layout: Real vs AI */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+        {/* Column 1: Authentic Human Voices */}
         <div
           style={{
-            background: 'rgba(9, 14, 26, 0.52)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            border: '1px solid rgba(16, 185, 129, 0.28)',
-            borderTop: '1px solid rgba(255, 255, 255, 0.14)',
-            borderRadius: '14px',
-            padding: '16px',
-            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)'
+            backgroundColor: 'var(--bg-canvas)',
+            border: '1px solid var(--border-subtle)',
+            borderTop: '3px solid var(--authentic-green)',
+            borderRadius: '12px',
+            padding: '16px'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', borderBottom: '1px solid rgba(255, 255, 255, 0.06)', paddingBottom: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', fontWeight: '700', color: '#34d399', background: 'rgba(16, 185, 129, 0.15)', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.35)', boxShadow: '0 0 10px rgba(16, 185, 129, 0.2)' }}>
-                <CheckCircle2 size={13} /> REAL VOICES
-              </span>
-            </div>
-            <span style={{ fontSize: '0.72rem', color: '#64748b' }}>Expected: Natural</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', paddingBottom: '10px', borderBottom: '1px solid var(--border-subtle)' }}>
+            <span className="badge-authentic">
+              <CheckCircle2 size={13} />
+              AUTHENTIC HUMAN SAMPLES
+            </span>
+            <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>Ground truth: Real</span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -302,26 +275,22 @@ export default function DemoClipPicker({ onSelectClip, isLoading, selectedClipId
           </div>
         </div>
 
-        {/* Section 2: AI-Generated Clones */}
+        {/* Column 2: AI Voice Clones */}
         <div
           style={{
-            background: 'rgba(9, 14, 26, 0.52)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            border: '1px solid rgba(239, 68, 68, 0.28)',
-            borderTop: '1px solid rgba(255, 255, 255, 0.14)',
-            borderRadius: '14px',
-            padding: '16px',
-            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)'
+            backgroundColor: 'var(--bg-canvas)',
+            border: '1px solid var(--border-subtle)',
+            borderTop: '3px solid var(--ai-red)',
+            borderRadius: '12px',
+            padding: '16px'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', borderBottom: '1px solid rgba(255, 255, 255, 0.06)', paddingBottom: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', fontWeight: '700', color: '#f87171', background: 'rgba(239, 68, 68, 0.15)', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.35)', boxShadow: '0 0 10px rgba(239, 68, 68, 0.2)' }}>
-                <AlertOctagon size={13} /> AI VOICES
-              </span>
-            </div>
-            <span style={{ fontSize: '0.72rem', color: '#64748b' }}>Expected: AI-Generated</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', paddingBottom: '10px', borderBottom: '1px solid var(--border-subtle)' }}>
+            <span className="badge-synthetic">
+              <AlertOctagon size={13} />
+              AI-GENERATED VOICE SAMPLES
+            </span>
+            <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>Ground truth: Synthetic</span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>

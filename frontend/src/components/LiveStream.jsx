@@ -137,7 +137,7 @@ export default function LiveStream() {
         }
       };
 
-      // 3. Setup Web Audio API Pipeline (16kHz target)
+      // 4. Setup Web Audio API Pipeline (16kHz target)
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       const audioCtx = new AudioContext();
       audioContextRef.current = audioCtx;
@@ -165,16 +165,18 @@ export default function LiveStream() {
         const avg = sum / bufferLength;
         setAudioLevel(Math.min(100, Math.round((avg / 128) * 100)));
 
-        // Draw visualizer bars
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Draw visualizer bars on clean dark slate background
+        ctx.fillStyle = '#0B1220';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
         const barWidth = (canvas.width / bufferLength) * 2;
         let x = 0;
 
         for (let i = 0; i < bufferLength; i++) {
           const barHeight = (dataArray[i] / 255) * canvas.height * 0.85;
           const gradient = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - barHeight);
-          gradient.addColorStop(0, '#06b6d4');
-          gradient.addColorStop(1, '#38bdf8');
+          gradient.addColorStop(0, '#2563EB');
+          gradient.addColorStop(1, '#06B6D4');
 
           ctx.fillStyle = gradient;
           ctx.fillRect(x, canvas.height - barHeight, barWidth - 1, barHeight);
@@ -293,19 +295,24 @@ export default function LiveStream() {
   const chunkScorePercent = latestData ? Math.round((latestData.chunk_score || 0) * 100) : 0;
   const flags = latestData?.heuristic_flags || [];
 
-  const verdictColor = isFake ? '#ef4444' : '#10b981';
-  const strokeDashoffset = 283 - (283 * rollingScorePercent) / 100;
-
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))', gap: '24px', alignItems: 'start' }}>
-      {/* Left Column: Live Mic Controls & Waveform */}
+      {/* Left Column: Live Mic Controls & Waveform Monitor */}
       <div className="vg-card">
         <div style={{ marginBottom: '18px' }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#f8fafc' }}>
-            Live microphone
-          </h2>
-          <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '2px' }}>
-            Stream audio through your microphone to detect synthetic voices in real time
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+              Live Microphone Monitor
+            </h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span className={isListening ? "pulse-dot" : ""} style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: isListening ? 'var(--authentic-green)' : 'var(--text-muted)' }} />
+              <span style={{ fontSize: '0.75rem', fontWeight: '500', color: 'var(--text-secondary)' }}>
+                {isListening ? 'Streaming (16kHz)' : 'Idle'}
+              </span>
+            </div>
+          </div>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+            Stream audio through your microphone to detect synthetic voice artifacts in real time.
           </p>
         </div>
 
@@ -313,8 +320,8 @@ export default function LiveStream() {
         {errorMessage && (
           <div
             style={{
-              background: errorType === 'disconnect' ? 'rgba(245, 158, 11, 0.08)' : 'rgba(239, 68, 68, 0.08)',
-              border: `1px solid ${errorType === 'disconnect' ? 'rgba(245, 158, 11, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+              backgroundColor: errorType === 'disconnect' ? 'var(--warning-amber-bg)' : 'var(--ai-red-bg)',
+              border: `1px solid ${errorType === 'disconnect' ? 'var(--warning-amber-border)' : 'var(--ai-red-border)'}`,
               borderRadius: '10px',
               padding: '16px',
               marginBottom: '18px'
@@ -322,13 +329,13 @@ export default function LiveStream() {
           >
             <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
               <AlertTriangle
-                size={22}
-                color={errorType === 'disconnect' ? '#f59e0b' : '#ef4444'}
+                size={20}
+                color={errorType === 'disconnect' ? 'var(--warning-amber)' : 'var(--ai-red)'}
                 style={{ flexShrink: 0, marginTop: '2px' }}
               />
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <h4 style={{ fontSize: '0.92rem', fontWeight: '700', color: errorType === 'disconnect' ? '#fbbf24' : '#f87171' }}>
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: '700', color: errorType === 'disconnect' ? '#92400E' : '#991B1B' }}>
                     {errorType === 'permission'
                       ? 'Microphone Permission Denied'
                       : errorType === 'disconnect'
@@ -339,10 +346,10 @@ export default function LiveStream() {
                   </h4>
                   <span
                     style={{
-                      fontSize: '0.68rem',
+                      fontSize: '0.6875rem',
                       fontWeight: '700',
-                      color: errorType === 'disconnect' ? '#fbbf24' : '#f87171',
-                      background: errorType === 'disconnect' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                      color: errorType === 'disconnect' ? '#92400E' : '#991B1B',
+                      backgroundColor: errorType === 'disconnect' ? '#FEF3C7' : '#FEE2E2',
                       padding: '2px 8px',
                       borderRadius: '4px'
                     }}
@@ -350,17 +357,17 @@ export default function LiveStream() {
                     {errorType?.toUpperCase()}
                   </span>
                 </div>
-                <p style={{ fontSize: '0.84rem', color: '#cbd5e1', lineHeight: '1.5' }}>
+                <p style={{ fontSize: '0.8125rem', color: errorType === 'disconnect' ? '#78350F' : '#7F1D1D', lineHeight: 1.45 }}>
                   {errorMessage}
                 </p>
 
                 {errorType === 'permission' && (
-                  <div style={{ marginTop: '10px', fontSize: '0.78rem', color: '#94a3b8', background: '#090d16', padding: '10px 12px', borderRadius: '6px', border: '1px solid #1e293b' }}>
-                    <strong style={{ color: '#f1f5f9' }}>To grant permission:</strong>
-                    <ol style={{ margin: '6px 0 0 18px', padding: 0 }}>
-                      <li>Click the tune/padlock icon next to the URL in your browser address bar.</li>
+                  <div style={{ marginTop: '10px', fontSize: '0.75rem', color: 'var(--text-secondary)', backgroundColor: '#FFFFFF', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                    <strong style={{ color: 'var(--text-primary)' }}>To enable microphone:</strong>
+                    <ol style={{ margin: '6px 0 0 16px', padding: 0 }}>
+                      <li>Click the site permissions / padlock icon next to your URL.</li>
                       <li>Toggle <strong>Microphone</strong> to <strong>Allow</strong>.</li>
-                      <li>Click <strong>Retry Microphone Access</strong> below.</li>
+                      <li>Click the retry button below.</li>
                     </ol>
                   </div>
                 )}
@@ -368,21 +375,10 @@ export default function LiveStream() {
                 <div style={{ marginTop: '12px' }}>
                   <button
                     onClick={startStreaming}
-                    style={{
-                      background: errorType === 'disconnect' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                      border: `1px solid ${errorType === 'disconnect' ? '#f59e0b' : '#ef4444'}`,
-                      color: '#f8fafc',
-                      padding: '6px 14px',
-                      borderRadius: '6px',
-                      fontSize: '0.8rem',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px'
-                    }}
+                    className="btn-secondary"
+                    style={{ padding: '6px 12px', fontSize: '0.75rem' }}
                   >
-                    <RefreshCw size={14} />
+                    <RefreshCw size={12} />
                     {errorType === 'permission' ? 'Retry Microphone Access' : 'Reconnect Live Stream'}
                   </button>
                 </div>
@@ -393,31 +389,26 @@ export default function LiveStream() {
 
         {/* Live Audio Visualizer Canvas */}
         <div
-          className={isListening ? 'live-listening-pulse' : ''}
           style={{
-            background: 'rgba(9, 14, 26, 0.65)',
-            backdropFilter: 'blur(14px)',
-            WebkitBackdropFilter: 'blur(14px)',
-            border: isListening ? '1px solid #06b6d4' : '1px solid rgba(255, 255, 255, 0.08)',
-            borderTop: isListening ? '1px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.16)',
-            borderRadius: '14px',
-            padding: '20px',
-            textAlign: 'center',
-            marginBottom: '20px',
+            backgroundColor: '#0B1220',
+            border: isListening ? '1px solid var(--primary-blue)' : '1px solid var(--border-subtle)',
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '18px',
             position: 'relative',
             overflow: 'hidden',
-            boxShadow: 'inset 0 1px 3px rgba(0, 0, 0, 0.4)',
-            transition: 'all 0.3s ease'
+            boxShadow: isListening ? '0 0 0 2px rgba(37, 99, 235, 0.2)' : 'none',
+            transition: 'all 0.2s ease'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: isListening ? '#38bdf8' : '#64748b' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', color: isListening ? '#38BDF8' : '#94A3B8' }}>
               <Radio size={14} className={isListening ? 'animate-pulse' : ''} />
-              <span>{isListening ? 'Microphone active' : 'Microphone idle'}</span>
+              <span>{isListening ? 'Microphone Active' : 'Waveform Monitor'}</span>
             </div>
             {isListening && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#94a3b8' }}>
-                <Volume2 size={14} color="#06b6d4" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#94A3B8' }}>
+                <Volume2 size={13} color="#38BDF8" />
                 <span>Level: {audioLevel}%</span>
               </div>
             )}
@@ -425,9 +416,9 @@ export default function LiveStream() {
 
           <canvas
             ref={canvasRef}
-            width={420}
-            height={90}
-            style={{ width: '100%', height: '90px', borderRadius: '6px', display: 'block' }}
+            width={440}
+            height={84}
+            style={{ width: '100%', height: '84px', borderRadius: '6px', display: 'block', backgroundColor: '#0B1220' }}
           />
 
           {!isListening && (
@@ -438,52 +429,52 @@ export default function LiveStream() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'rgba(8, 12, 23, 0.75)',
-                backdropFilter: 'blur(6px)',
-                WebkitBackdropFilter: 'blur(6px)',
-                padding: '16px'
+                backgroundColor: 'rgba(11, 18, 32, 0.75)',
+                backdropFilter: 'blur(3px)',
+                padding: '16px',
+                textAlign: 'center'
               }}
             >
-              <p style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
+              <p style={{ fontSize: '0.8125rem', color: '#CBD5E1' }}>
                 {streamStatus === 'connecting'
                   ? 'Requesting microphone permissions and connecting to server...'
                   : streamStatus === 'disconnected'
                   ? 'Stream disconnected. Click "Reconnect Live Stream" to resume.'
-                  : 'Click "Start listening" below to begin live analysis'}
+                  : 'Click "Start live stream" below to begin real-time speech inspection.'}
               </p>
             </div>
           )}
         </div>
 
         {/* Primary Toggle Action */}
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', gap: '12px' }}>
           {streamStatus === 'connecting' ? (
             <button
               disabled
               className="btn-primary"
-              style={{ width: '100%', padding: '14px 24px', fontSize: '1rem', opacity: 0.8, cursor: 'wait' }}
+              style={{ width: '100%', padding: '12px 20px', fontSize: '0.9375rem', opacity: 0.8 }}
             >
-              <Loader2 size={20} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
+              <Loader2 size={18} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
               Connecting microphone...
             </button>
           ) : !isListening ? (
             <button
               onClick={startStreaming}
               className="btn-primary"
-              style={{ width: '100%', padding: '14px 24px', fontSize: '1rem' }}
+              style={{ width: '100%', padding: '12px 20px', fontSize: '0.9375rem' }}
             >
-              <Mic size={20} />
-              {streamStatus === 'disconnected' ? 'Reconnect stream' : 'Start listening'}
+              <Mic size={18} />
+              {streamStatus === 'disconnected' ? 'Reconnect live stream' : 'Start live stream'}
             </button>
           ) : (
             <button
               onClick={stopStreaming}
               style={{
                 width: '100%',
-                padding: '14px 24px',
-                fontSize: '1rem',
-                background: '#dc2626',
-                color: '#ffffff',
+                padding: '12px 20px',
+                fontSize: '0.9375rem',
+                backgroundColor: 'var(--ai-red)',
+                color: '#FFFFFF',
                 border: 'none',
                 borderRadius: '8px',
                 fontWeight: '600',
@@ -492,190 +483,209 @@ export default function LiveStream() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                boxShadow: '0 4px 14px rgba(220, 38, 38, 0.4)'
+                boxShadow: 'var(--shadow-sm)',
+                transition: 'background-color 0.15s ease'
               }}
             >
-              <MicOff size={20} />
-              Stop listening
+              <MicOff size={18} />
+              Stop streaming
             </button>
           )}
         </div>
 
-        <div style={{ marginTop: '16px', fontSize: '0.75rem', color: '#64748b', textAlign: 'center' }}>
-          Audio is processed locally in rolling ~1.5-second windows; nothing is stored or uploaded.
-        </div>
+        <p style={{ marginTop: '12px', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+          Audio is downsampled to 16 kHz mono and streamed in rolling ~1.5s frames; zero audio is recorded to disk.
+        </p>
       </div>
 
-      {/* Right Column: Live Smoothed Score & Acoustic Findings */}
+      {/* Right Column: Live Smoothed Verdict & Findings */}
       <div className="vg-card">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #1e293b', paddingBottom: '18px', marginBottom: '20px' }}>
+        {/* Verdict Header */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingBottom: '16px',
+            borderBottom: '1px solid var(--border-subtle)',
+            marginBottom: '18px',
+            flexWrap: 'wrap',
+            gap: '12px'
+          }}
+        >
           <div>
-            <span style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: '700' }}>
-              Live verdict
+            <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: '700' }}>
+              Live Verdict
             </span>
-            <div style={{ marginTop: '6px' }}>
+            <div style={{ marginTop: '4px' }}>
               {streamStatus === 'connecting' ? (
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(6, 182, 212, 0.1)', color: '#38bdf8', padding: '6px 14px', borderRadius: '9999px', fontSize: '0.82rem', fontWeight: '600', border: '1px solid rgba(6, 182, 212, 0.25)' }}>
-                  <Loader2 size={16} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
-                  <span>CONNECTING...</span>
-                </div>
+                <span className="badge-neutral" style={{ fontSize: '0.8125rem', padding: '4px 10px' }}>
+                  <Loader2 size={14} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
+                  Connecting...
+                </span>
               ) : streamStatus === 'disconnected' ? (
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(245, 158, 11, 0.12)', color: '#fbbf24', padding: '6px 14px', borderRadius: '9999px', fontSize: '0.82rem', fontWeight: '600', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
-                  <AlertTriangle size={16} />
-                  <span>DISCONNECTED</span>
-                </div>
+                <span className="badge-neutral" style={{ color: 'var(--warning-amber)', borderColor: 'var(--warning-amber-border)', backgroundColor: 'var(--warning-amber-bg)', fontSize: '0.8125rem', padding: '4px 10px' }}>
+                  <AlertTriangle size={14} />
+                  Disconnected
+                </span>
               ) : isListening && !latestData ? (
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(6, 182, 212, 0.12)', color: '#38bdf8', padding: '6px 14px', borderRadius: '9999px', fontSize: '0.82rem', fontWeight: '600', border: '1px solid rgba(6, 182, 212, 0.3)' }}>
-                  <Activity size={16} className="animate-pulse" />
-                  <span>BUFFERING AUDIO...</span>
-                </div>
+                <span className="badge-neutral" style={{ color: 'var(--primary-blue)', borderColor: 'var(--primary-blue-subtle)', backgroundColor: 'var(--primary-blue-subtle)', fontSize: '0.8125rem', padding: '4px 10px' }}>
+                  <Activity size={14} className="animate-pulse" />
+                  Buffering audio (1.5s)...
+                </span>
               ) : !latestData ? (
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#1e293b', color: '#94a3b8', padding: '6px 14px', borderRadius: '9999px', fontSize: '0.82rem', fontWeight: '600' }}>
-                  AWAITING AUDIO
-                </div>
+                <span className="badge-neutral" style={{ fontSize: '0.8125rem', padding: '4px 10px' }}>
+                  Awaiting audio
+                </span>
               ) : isFake ? (
-                <div className="badge-danger">
-                  <ShieldAlert size={17} />
-                  <span>AI-Generated Voice</span>
-                </div>
+                <span className="badge-synthetic" style={{ fontSize: '0.875rem', padding: '5px 12px' }}>
+                  <ShieldAlert size={18} />
+                  AI-Generated Voice
+                </span>
               ) : (
-                <div className="badge-safe">
-                  <ShieldCheck size={17} />
-                  <span>Natural Human Voice</span>
-                </div>
+                <span className="badge-authentic" style={{ fontSize: '0.875rem', padding: '5px 12px' }}>
+                  <ShieldCheck size={18} />
+                  Natural Human Voice
+                </span>
               )}
             </div>
           </div>
 
-          {/* Circular Gauge Meter */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{ position: 'relative', width: '70px', height: '70px' }}>
-              <svg width="70" height="70" viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
-                <circle cx="50" cy="50" r="45" fill="transparent" stroke="#1e293b" strokeWidth="10" />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="45"
-                  fill="transparent"
-                  stroke={latestData ? verdictColor : isListening ? '#06b6d4' : '#334155'}
-                  strokeWidth="10"
-                  strokeDasharray="283"
-                  strokeDashoffset={latestData ? strokeDashoffset : 283}
-                  strokeLinecap="round"
-                  style={{ transition: 'stroke-dashoffset 0.6s ease' }}
-                />
-              </svg>
-              <div
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: latestData ? '1rem' : '0.85rem',
-                  fontWeight: '800',
-                  color: latestData ? verdictColor : isListening ? '#38bdf8' : '#64748b',
-                  fontFamily: "'JetBrains Mono', monospace"
-                }}
-              >
-                {latestData ? `${rollingScorePercent}%` : isListening ? '...' : '--'}
-              </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '1.75rem', fontWeight: '800', color: latestData ? (isFake ? 'var(--ai-red)' : 'var(--authentic-green)') : 'var(--text-muted)', lineHeight: 1.1 }}>
+              {latestData ? `${rollingScorePercent}%` : '--'}
             </div>
-
-            <div>
-              <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '500' }}>
-                Rolling Confidence
-              </div>
-              <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#f1f5f9' }}>
-                {latestData
-                  ? (isFake ? 'Synthetic voice detected' : 'Natural speech detected')
-                  : isListening
-                  ? 'Analyzing stream...'
-                  : '5-chunk window'}
-              </div>
+            <div style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-secondary)' }}>
+              Rolling Confidence
             </div>
           </div>
         </div>
 
-        {/* Progress Bar Meter */}
-        <div style={{ marginBottom: '22px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', marginBottom: '6px', fontWeight: '500' }}>
-            <span>0% Human</span>
-            <span style={{ color: '#06b6d4', fontWeight: '600' }}>50% Threshold</span>
-            <span>100% AI</span>
+        {/* Horizontal Confidence Spectrum */}
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: '500', color: 'var(--text-secondary)' }}>
+            <span style={{ color: 'var(--ai-red)', fontWeight: '600' }}>AI-Generated</span>
+            <span style={{ color: 'var(--text-muted)' }}>Threshold: 50%</span>
+            <span style={{ color: 'var(--authentic-green)', fontWeight: '600' }}>Human Voice</span>
           </div>
-          <div className="meter-container">
+
+          <div className="confidence-spectrum">
             <div
-              className="meter-fill"
+              className="confidence-indicator"
               style={{
-                width: `${rollingScorePercent}%`,
-                backgroundColor: latestData ? verdictColor : '#334155',
-                boxShadow: latestData
-                  ? (isFake ? '0 0 14px rgba(239, 68, 68, 0.5)' : '0 0 14px rgba(16, 185, 129, 0.5)')
-                  : 'none'
+                left: latestData ? `${Math.max(4, Math.min(96, 100 - rollingScorePercent))}%` : '50%'
               }}
             />
           </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
+            <span>100% Synthetic</span>
+            <span>Smoothed Window (5 Chunks)</span>
+            <span>100% Genuine</span>
+          </div>
         </div>
 
-        {/* Breakdown Details Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '22px' }}>
-          <div style={{ background: 'rgba(11, 18, 34, 0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.07)', borderTop: '1px solid rgba(255, 255, 255, 0.14)', borderRadius: '12px', padding: '14px', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.2)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '0.75rem', marginBottom: '4px' }}>
-              <Activity size={14} color="#06b6d4" />
-              Latest Chunk
+        {/* 2-Column Metrics Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+          <div
+            style={{
+              backgroundColor: 'var(--bg-surface-subtle)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: '10px',
+              padding: '14px'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: '600', marginBottom: '4px' }}>
+              <Activity size={15} color="var(--primary-blue)" />
+              Latest 1.5s Chunk
             </div>
-            <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#f8fafc', fontFamily: "'JetBrains Mono', monospace" }}>
+            <div style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)' }}>
               {latestData ? `${chunkScorePercent}%` : '--'}
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
-              Recent 1.5s slice
+            <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+              Raw neural chunk score
             </div>
           </div>
 
-          <div style={{ background: 'rgba(11, 18, 34, 0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.07)', borderTop: '1px solid rgba(255, 255, 255, 0.14)', borderRadius: '12px', padding: '14px', boxShadow: '0 4px 14px rgba(0, 0, 0, 0.2)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '0.75rem', marginBottom: '4px' }}>
-              <Cpu size={14} color="#06b6d4" />
-              Rolling Average
+          <div
+            style={{
+              backgroundColor: 'var(--bg-surface-subtle)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: '10px',
+              padding: '14px'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: '600', marginBottom: '4px' }}>
+              <Cpu size={15} color="var(--accent-cyan)" />
+              Rolling 5-Frame Average
             </div>
-            <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#f8fafc', fontFamily: "'JetBrains Mono', monospace" }}>
+            <div style={{ fontSize: '1.25rem', fontWeight: '700', color: latestData ? (isFake ? 'var(--ai-red)' : 'var(--authentic-green)') : 'var(--text-primary)' }}>
               {latestData ? `${rollingScorePercent}%` : '--'}
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
-              Smoothed last 5 chunks
+            <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+              Calibrated stability score
             </div>
           </div>
         </div>
 
-        {/* Live Heuristic Flags */}
+        {/* Live Acoustic Checks */}
         <div>
-          <h4 style={{ fontSize: '0.8rem', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>
-            Live Acoustic Checks ({flags.length})
-          </h4>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <h4 style={{ fontSize: '0.8125rem', fontWeight: '700', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Live Acoustic Checks ({flags.length})
+            </h4>
+            <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
+              Real-time anomaly detection
+            </span>
+          </div>
 
           {flags.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {flags.map((flag, idx) => (
-                <div key={idx} className="flag-chip" style={{ width: '100%' }}>
+                <div key={idx} className="flag-card">
                   <AlertTriangle size={16} style={{ flexShrink: 0 }} />
-                  <span style={{ fontWeight: '500' }}>{flag}</span>
+                  <span>{flag}</span>
                 </div>
               ))}
             </div>
           ) : latestData && isFake ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(56, 189, 248, 0.08)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(56, 189, 248, 0.28)', borderTop: '1px solid rgba(255, 255, 255, 0.15)', color: '#cbd5e1', padding: '12px 14px', borderRadius: '9px', fontSize: '0.85rem' }}>
-              <Info size={18} color="#38bdf8" style={{ flexShrink: 0 }} />
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                backgroundColor: 'var(--info-blue-bg)',
+                border: '1px solid var(--info-blue-border)',
+                color: '#075985',
+                padding: '12px 14px',
+                borderRadius: '8px',
+                fontSize: '0.8125rem'
+              }}
+            >
+              <Info size={18} color="var(--info-blue)" style={{ flexShrink: 0 }} />
               <span>No acoustic anomalies independently flagged — detection is based primarily on neural model analysis.</span>
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: isListening ? 'rgba(6, 182, 212, 0.08)' : 'rgba(16, 185, 129, 0.1)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: isListening ? '1px solid rgba(6, 182, 212, 0.3)' : '1px solid rgba(16, 185, 129, 0.35)', borderTop: '1px solid rgba(255, 255, 255, 0.15)', color: isListening ? '#38bdf8' : '#6ee7b7', padding: '12px 14px', borderRadius: '9px', fontSize: '0.85rem' }}>
-              <CheckCircle2 size={18} color={isListening ? '#06b6d4' : '#10b981'} style={{ flexShrink: 0 }} />
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                backgroundColor: isListening ? 'var(--primary-blue-subtle)' : 'var(--authentic-green-bg)',
+                border: `1px solid ${isListening ? '#BFDBFE' : 'var(--authentic-green-border)'}`,
+                color: isListening ? '#1E40AF' : '#166534',
+                padding: '12px 14px',
+                borderRadius: '8px',
+                fontSize: '0.8125rem'
+              }}
+            >
+              <CheckCircle2 size={18} color={isListening ? 'var(--primary-blue)' : 'var(--authentic-green)'} style={{ flexShrink: 0 }} />
               <span>
                 {latestData
                   ? 'Pitch jitter, harmonic decay, and breathing pauses fall within natural human ranges. No anomalies detected.'
                   : isListening
-                  ? 'Listening... Evaluating speech acoustics in 1.5s windows.'
-                  : 'Start listening to monitor voice physics in real time.'}
+                  ? 'Streaming active: evaluating speech acoustics in 1.5s sliding frames.'
+                  : 'Start live stream to monitor vocal tract physics in real time.'}
               </span>
             </div>
           )}
