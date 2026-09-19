@@ -1,4 +1,6 @@
+import React, { useState } from 'react';
 import { Shield, Sparkles, AudioWaveform } from 'lucide-react';
+import FileUpload from './components/FileUpload';
 import ResultsPanel from './components/ResultsPanel';
 import { analyzeAudioFile } from './api';
 
