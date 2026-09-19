@@ -141,7 +141,7 @@ def analyze_audio(waveform: np.ndarray, sample_rate: int) -> Dict[str, Any]:
     model_score = round(fake_prob, 2)
 
     # 3. Run Heuristic Explainability Layer (pitch jitter, spectral flatness, pause patterns)
-    heuristics_result = compute_heuristics(waveform, sample_rate)
+    heuristics_result = compute_heuristics(processed_audio, TARGET_SAMPLE_RATE)
     heuristic_score = heuristics_result["heuristic_score"]
     heuristic_flags: List[str] = heuristics_result["flags"]
 

@@ -42,6 +42,20 @@ if os.path.exists(demo_clips_dir):
     app.mount("/demo_clips", StaticFiles(directory=demo_clips_dir), name="demo_clips")
 
 
+@app.on_event("startup")
+async def startup_event():
+    import asyncio
+    async def _warm():
+        try:
+            from analysis import get_model_and_extractor
+            logger.info("Pre-warming VoiceGuard neural model in background...")
+            await asyncio.to_thread(get_model_and_extractor)
+            logger.info("VoiceGuard neural model pre-warmed successfully.")
+        except Exception as e:
+            logger.warning(f"Model pre-warm note: {e}")
+    asyncio.create_task(_warm())
+
+
 class AnalysisResponse(BaseModel):
     label: str
     confidence: float
@@ -193,7 +207,10 @@ def decode_audio_chunk(data: bytes, default_sr: int = 16000) -> tuple[np.ndarray
         try:
             with io.BytesIO(data) as bio:
                 waveform, sr = sf.read(bio)
-                return np.asarray(waveform, dtype=np.float32), sr
+                arr = np.asarray(waveform, dtype=np.float32)
+                if arr.ndim > 1:
+                    arr = np.mean(arr, axis=0) if arr.shape[0] < arr.shape[1] else np.mean(arr, axis=1)
+                return arr, sr
         except Exception:
             pass
 
@@ -209,8 +226,11 @@ def decode_audio_chunk(data: bytes, default_sr: int = 16000) -> tuple[np.ndarray
     # 3. Fallback to librosa
     try:
         with io.BytesIO(data) as bio:
-            waveform, sr = librosa.load(bio, sr=default_sr, mono=False)
-            return np.asarray(waveform, dtype=np.float32), sr
+            waveform, sr = librosa.load(bio, sr=default_sr, mono=True)
+            arr = np.asarray(waveform, dtype=np.float32)
+            if arr.ndim > 1:
+                arr = np.mean(arr, axis=0) if arr.shape[0] < arr.shape[1] else np.mean(arr, axis=1)
+            return arr, sr
     except Exception as e:
         raise ValueError(f"Could not decode audio chunk: {e}")
 
@@ -287,7 +307,7 @@ async def websocket_stream(websocket: WebSocket):
                 await websocket.send_json(response_payload)
 
             except Exception as chunk_err:
-                logger.warning(f"Error processing stream chunk from {client_id}: {chunk_err}")
+                logger.warning(f"Error processing stream chunk from {client_id}: {chunk_err}", exc_info=True)
                 continue
 
     except WebSocketDisconnect:

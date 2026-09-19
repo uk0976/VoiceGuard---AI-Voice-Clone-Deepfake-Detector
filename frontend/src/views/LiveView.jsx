@@ -21,6 +21,7 @@ export default function LiveView() {
   const [errorType, setErrorType] = useState(null);
   const [latestData, setLatestData] = useState(null);
   const [audioLevel, setAudioLevel] = useState(0);
+  const [chunkCount, setChunkCount] = useState(0);
 
   const isListeningRef = useRef(false);
   const streamStatusRef = useRef('idle');
@@ -87,6 +88,7 @@ export default function LiveView() {
     setErrorMessage(null);
     setErrorType(null);
     setLatestData(null);
+    setChunkCount(0);
     updateStreamStatus('connecting');
 
     try {
@@ -104,7 +106,7 @@ export default function LiveView() {
       mediaStreamRef.current = stream;
 
       const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsHost = window.location.hostname || 'localhost';
+      const wsHost = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
       const wsUrl = `${wsProtocol}//${wsHost}:8000/ws/stream`;
 
       const ws = new WebSocket(wsUrl);
@@ -120,6 +122,7 @@ export default function LiveView() {
         try {
           const data = JSON.parse(event.data);
           setLatestData(data);
+          setChunkCount((prev) => prev + 1);
         } catch (err) {
           console.error('Failed to parse WebSocket message:', err);
         }
@@ -150,6 +153,10 @@ export default function LiveView() {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       const audioCtx = new AudioContext();
       audioContextRef.current = audioCtx;
+
+      if (audioCtx.state === 'suspended') {
+        await audioCtx.resume();
+      }
 
       const source = audioCtx.createMediaStreamSource(stream);
       const analyser = audioCtx.createAnalyser();
@@ -394,14 +401,23 @@ export default function LiveView() {
           </div>
 
           <div>
-            {!isListening ? (
+            {streamStatus === 'connecting' ? (
+              <button
+                disabled
+                className="btn-primary"
+                style={{ width: '100%', opacity: 0.7, cursor: 'wait' }}
+              >
+                <Loader2 size={15} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
+                Connecting microphone...
+              </button>
+            ) : !isListening ? (
               <button
                 onClick={startStreaming}
                 className="btn-primary"
                 style={{ width: '100%' }}
               >
                 <Mic size={15} />
-                Start listening
+                {streamStatus === 'disconnected' ? 'Reconnect stream' : 'Start listening'}
               </button>
             ) : (
               <button
@@ -435,23 +451,23 @@ export default function LiveView() {
             <div style={{ fontSize: '0.8125rem', fontWeight: '600', color: 'var(--text-primary)' }}>
               Pipeline State
             </div>
-            <span className={`badge-status ${isListening ? 'badge-human' : 'badge-neutral'}`}>
-              {isListening ? 'Active' : 'Standby'}
+            <span className={`badge-status ${isListening ? 'badge-human' : streamStatus === 'connecting' ? 'badge-warning' : streamStatus === 'disconnected' || streamStatus === 'error' ? 'badge-ai' : 'badge-neutral'}`}>
+              {isListening ? 'Active' : streamStatus === 'connecting' ? 'Connecting...' : streamStatus === 'disconnected' ? 'Disconnected' : 'Standby'}
             </span>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '14px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 10px', backgroundColor: 'var(--surface-secondary)', borderRadius: 'var(--radius-sm)' }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Connection</span>
-              <span className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-primary)' }}>
-                {streamStatus === 'listening' ? 'WebSocket OPEN' : streamStatus.toUpperCase()}
+              <span className="mono" style={{ fontSize: '0.75rem', color: isListening ? 'var(--color-human)' : streamStatus === 'connecting' ? 'var(--color-warning)' : 'var(--text-primary)' }}>
+                {streamStatus === 'listening' ? 'WebSocket Connected' : streamStatus === 'connecting' ? 'CONNECTING...' : streamStatus.toUpperCase()}
               </span>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 10px', backgroundColor: 'var(--surface-secondary)', borderRadius: 'var(--radius-sm)' }}>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Window Size</span>
-              <span className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-primary)' }}>
-                1.5s (24,000 samples)
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Chunks Received</span>
+              <span className="mono" style={{ fontSize: '0.75rem', color: chunkCount > 0 ? 'var(--accent-cyan)' : 'var(--text-muted)' }}>
+                {chunkCount > 0 ? `${chunkCount} slices` : isListening ? 'Buffering 1.5s slice...' : '--'}
               </span>
             </div>
 
@@ -482,8 +498,8 @@ export default function LiveView() {
           <div style={{ marginBottom: '14px' }}>
             <div style={{ marginBottom: '6px' }}>
               {!latestData ? (
-                <span className="badge-status badge-neutral">
-                  {isListening ? 'Buffering Speech...' : 'Awaiting Audio'}
+                <span className={`badge-status ${isListening ? 'badge-warning' : 'badge-neutral'}`}>
+                  {isListening ? 'EVALUATING SPEECH...' : 'AWAITING AUDIO'}
                 </span>
               ) : isFake ? (
                 <span className="badge-status badge-ai" style={{ fontSize: '0.8125rem', padding: '4px 10px' }}>
