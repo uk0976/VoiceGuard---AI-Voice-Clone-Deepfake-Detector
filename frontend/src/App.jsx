@@ -3,6 +3,7 @@ import { Shield, Sparkles, AudioWaveform, Cpu, Activity, Radio, CheckCircle, Ref
 import FileUpload from './components/FileUpload';
 import ResultsPanel from './components/ResultsPanel';
 import DemoClipPicker from './components/DemoClipPicker';
+import LiveStream from './components/LiveStream';
 import { analyzeAudioFile } from './api';
 
 export default function App() {
@@ -176,32 +177,86 @@ export default function App() {
             </p>
           </div>
 
-          {/* Two-Column Grid Layout: Input on Left, Verdict on Right */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))',
-              gap: '24px',
-              alignItems: 'start'
-            }}
-          >
-            {/* Left: Upload & Audio Inspector */}
-            <div>
-              <FileUpload onAnalyze={handleAnalyzeFile} isLoading={isLoading} />
-            </div>
-
-            {/* Right: Results & Acoustic Metrics */}
-            <div>
-              <ResultsPanel result={analysisResult} isLoading={isLoading} error={errorMessage} />
+          {/* Mode Selector Tabs */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '28px' }}>
+            <div style={{ background: '#0f172a', border: '1px solid #1e293b', padding: '5px', borderRadius: '12px', display: 'inline-flex', gap: '6px' }}>
+              <button
+                onClick={() => setActiveTab('upload')}
+                style={{
+                  background: activeTab === 'upload' ? 'linear-gradient(135deg, #06b6d4, #0284c7)' : 'transparent',
+                  color: activeTab === 'upload' ? '#ffffff' : '#94a3b8',
+                  border: 'none',
+                  padding: '9px 22px',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s ease',
+                  boxShadow: activeTab === 'upload' ? '0 2px 12px rgba(6, 182, 212, 0.35)' : 'none'
+                }}
+              >
+                <AudioWaveform size={16} />
+                Mode A: File Upload
+              </button>
+              <button
+                onClick={() => setActiveTab('stream')}
+                style={{
+                  background: activeTab === 'stream' ? 'linear-gradient(135deg, #06b6d4, #0284c7)' : 'transparent',
+                  color: activeTab === 'stream' ? '#ffffff' : '#94a3b8',
+                  border: 'none',
+                  padding: '9px 22px',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s ease',
+                  boxShadow: activeTab === 'stream' ? '0 2px 12px rgba(6, 182, 212, 0.35)' : 'none'
+                }}
+              >
+                <Radio size={16} />
+                Mode B: Real-Time Live Stream
+              </button>
             </div>
           </div>
 
-          {/* Section 7 Demo Clips for Judges */}
-          <DemoClipPicker
-            onSelectClip={handleAnalyzeFile}
-            isLoading={isLoading}
-            selectedClipId={selectedClipId}
-          />
+          {activeTab === 'upload' ? (
+            <>
+              {/* Two-Column Grid Layout: Input on Left, Verdict on Right */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))',
+                  gap: '24px',
+                  alignItems: 'start'
+                }}
+              >
+                {/* Left: Upload & Audio Inspector */}
+                <div>
+                  <FileUpload onAnalyze={handleAnalyzeFile} isLoading={isLoading} />
+                </div>
+
+                {/* Right: Results & Acoustic Metrics */}
+                <div>
+                  <ResultsPanel result={analysisResult} isLoading={isLoading} error={errorMessage} />
+                </div>
+              </div>
+
+              {/* Section 7 Demo Clips for Judges */}
+              <DemoClipPicker
+                onSelectClip={handleAnalyzeFile}
+                isLoading={isLoading}
+                selectedClipId={selectedClipId}
+              />
+            </>
+          ) : (
+            <LiveStream />
+          )}
 
           {/* Technical Architecture Specs for Judges */}
           <div
