@@ -3,7 +3,10 @@
  * Interfaces with FastAPI /analyze endpoint and future /ws/stream WebSocket.
  */
 
-const API_BASE = 'http://localhost:8000';
+export const API_BASE = import.meta.env.VITE_API_URL || 
+  (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
+    ? 'http://127.0.0.1:8000' 
+    : '');
 
 /**
  * Uploads an audio file (.wav or .mp3) to POST /analyze
@@ -16,18 +19,22 @@ export async function analyzeAudioFile(file, filename) {
   formData.append('file', file, filename || file.name || 'recording.wav');
 
   let response;
+  const endpoint = API_BASE ? `${API_BASE}/analyze` : '/analyze';
   try {
-    // Attempt relative path first (leveraging Vite proxy), fallback to absolute API_BASE
-    response = await fetch('/analyze', {
+    response = await fetch(endpoint, {
       method: 'POST',
       body: formData,
     });
   } catch (err) {
-    // If Vite proxy isn't routing, try direct backend URL
-    response = await fetch(`${API_BASE}/analyze`, {
-      method: 'POST',
-      body: formData,
-    });
+    // If targetUrl failed, attempt fallback to relative route
+    if (API_BASE) {
+      response = await fetch('/analyze', {
+        method: 'POST',
+        body: formData,
+      });
+    } else {
+      throw err;
+    }
   }
 
   if (!response.ok) {

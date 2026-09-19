@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Play, Pause, ShieldCheck, ShieldAlert, Loader2, FileAudio, ArrowRight } from 'lucide-react';
+import { API_BASE } from '../api';
 
 export default function SamplesView({ onSelectClip, isLoading, selectedClipId }) {
   const [activeFilter, setActiveFilter] = useState('all'); // 'all' | 'real' | 'fake'
@@ -89,7 +90,8 @@ export default function SamplesView({ onSelectClip, isLoading, selectedClipId })
     } else {
       audio.play().catch((err) => {
         console.warn('Playback fallback:', err);
-        const fallbackAudio = new Audio(`http://localhost:8000/demo_clips/${clip.filename}`);
+        const fallbackUrl = API_BASE ? `${API_BASE}/demo_clips/${clip.filename}` : `/demo_clips/${clip.filename}`;
+        const fallbackAudio = new Audio(fallbackUrl);
         fallbackAudio.onended = () => setPlayingId(null);
         fallbackAudio.play().catch(console.error);
         setAudioElements((prev) => ({ ...prev, [clip.id]: fallbackAudio }));
@@ -108,7 +110,8 @@ export default function SamplesView({ onSelectClip, isLoading, selectedClipId })
         res = await fetch(getAudioUrl(clip.filename));
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
       } catch {
-        res = await fetch(`http://localhost:8000/demo_clips/${clip.filename}`);
+        const fallbackUrl = API_BASE ? `${API_BASE}/demo_clips/${clip.filename}` : `/demo_clips/${clip.filename}`;
+        res = await fetch(fallbackUrl);
       }
 
       const blob = await res.blob();

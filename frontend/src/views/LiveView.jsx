@@ -259,9 +259,24 @@ export default function LiveView({ onSaveReport, onNavigate }) {
       });
       mediaStreamRef.current = stream;
 
-      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsHost = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-      const wsUrl = `${wsProtocol}//${wsHost}:8000/ws/stream`;
+      let wsUrl = import.meta.env.VITE_WS_URL;
+      if (!wsUrl) {
+        const apiUrl = import.meta.env.VITE_API_URL;
+        if (apiUrl) {
+          try {
+            const parsed = new URL(apiUrl);
+            const proto = parsed.protocol === 'https:' ? 'wss:' : 'ws:';
+            wsUrl = `${proto}//${parsed.host}/ws/stream`;
+          } catch {
+            wsUrl = apiUrl.replace(/^http/, 'ws') + '/ws/stream';
+          }
+        } else {
+          const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+          const wsHost = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? '127.0.0.1' : window.location.hostname;
+          const wsPort = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? ':8000' : (window.location.port ? `:${window.location.port}` : '');
+          wsUrl = `${wsProtocol}//${wsHost}${wsPort}/ws/stream`;
+        }
+      }
 
       const ws = new WebSocket(wsUrl);
       ws.binaryType = 'arraybuffer';
