@@ -300,24 +300,32 @@ async def websocket_stream(websocket: WebSocket):
                 rms = float(np.sqrt(np.mean(waveform**2)))
                 peak = float(np.max(np.abs(waveform)))
 
-                # Voice Activity Gate: If user is paused or ambient mic silence
-                if rms < 0.0035 and peak < 0.015:
-                    rolling_avg_score = round(sum(rolling_buffer) / len(rolling_buffer), 4) if rolling_buffer else 0.015
+                # Voice Activity Gate: If user is paused or ambient mic silence (< -48dB)
+                if rms < 0.002 and peak < 0.008:
+                    try:
+                        flatness = float(np.mean(librosa.feature.spectral_flatness(y=waveform)))
+                        centroid = float(np.mean(librosa.feature.spectral_centroid(y=waveform, sr=sr)))
+                    except Exception:
+                        flatness = 0.015
+                        centroid = 0.0
+                    ambient_chunk = round(0.045 + 0.02 * min(1.0, flatness / 0.03), 4)
+                    rolling_buffer.append(ambient_chunk)
+                    rolling_avg_score = round(sum(rolling_buffer) / len(rolling_buffer), 4)
                     label = "likely_ai_generated" if rolling_avg_score >= 0.50 else "likely_real"
                     confidence = rolling_avg_score if label == "likely_ai_generated" else round(1.0 - rolling_avg_score, 4)
                     response_payload = {
-                        "chunk_score": 0.015,
+                        "chunk_score": ambient_chunk,
                         "rolling_avg_score": rolling_avg_score,
                         "confidence": confidence,
                         "label": label,
                         "heuristic_flags": [],
                         "metrics": {
-                            "pitch_jitter": 0.022,
-                            "f0_std": 0.08,
-                            "spectral_flatness": 0.015,
-                            "pause_ratio": 0.5,
-                            "speech_ratio": 0.0,
-                            "spectral_centroid_hz": 0.0
+                            "pitch_jitter": 0.024,
+                            "f0_std": 0.09,
+                            "spectral_flatness": round(flatness, 4),
+                            "pause_ratio": 0.95,
+                            "speech_ratio": 0.05,
+                            "spectral_centroid_hz": round(centroid, 1)
                         }
                     }
                     await websocket.send_json(response_payload)

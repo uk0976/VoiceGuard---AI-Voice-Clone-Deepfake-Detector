@@ -413,9 +413,9 @@ export default function LiveView({ onSaveReport, onNavigate }) {
       processorRef.current = processor;
       window.__voiceguard_processor = processor; // Prevent V8 garbage collection
 
-      // Route via a muted gain node to destination to keep pipeline alive without speaker feedback
+      // Route via an inaudible gain node (1e-5) to prevent Chromium from optimizing away the processor
       const silentGain = audioCtx.createGain();
-      silentGain.gain.value = 0;
+      silentGain.gain.value = 0.00001;
       processor.connect(silentGain);
       silentGain.connect(audioCtx.destination);
       source.connect(processor);
@@ -428,10 +428,16 @@ export default function LiveView({ onSaveReport, onNavigate }) {
 
       const dispatchSlice = () => {
         if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) return;
-        if (sampleBufferRef.current.length < targetSampleCount) return;
+        if (sampleBufferRef.current.length < 8000) return; // Minimum 0.5s of audio to analyze
 
-        const chunkSamples = sampleBufferRef.current.slice(0, targetSampleCount);
-        sampleBufferRef.current = sampleBufferRef.current.slice(targetSampleCount);
+        let chunkSamples;
+        if (sampleBufferRef.current.length >= targetSampleCount) {
+          chunkSamples = sampleBufferRef.current.slice(0, targetSampleCount);
+          sampleBufferRef.current = sampleBufferRef.current.slice(targetSampleCount);
+        } else {
+          chunkSamples = sampleBufferRef.current.slice(0);
+          sampleBufferRef.current = [];
+        }
 
         const wavBuffer = encodeWavChunk(chunkSamples, targetSr);
         try {
@@ -442,6 +448,9 @@ export default function LiveView({ onSaveReport, onNavigate }) {
       };
 
       processor.onaudioprocess = (e) => {
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume().catch(() => {});
+        }
         const inputData = e.inputBuffer.getChannelData(0);
         const ratio = nativeSr / targetSr;
         const newLength = Math.round(inputData.length / ratio);
@@ -456,10 +465,10 @@ export default function LiveView({ onSaveReport, onNavigate }) {
         }
       };
 
-      // Periodic watchdog interval (every 1000ms): guarantees chunks dispatch continuously
+      // Periodic watchdog interval (every 1000ms): guarantees chunks dispatch continuously without stalling
       flushIntervalRef.current = setInterval(() => {
         if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) return;
-        if (sampleBufferRef.current.length >= targetSampleCount) {
+        if (sampleBufferRef.current.length >= 8000) {
           dispatchSlice();
         }
       }, 1000);
