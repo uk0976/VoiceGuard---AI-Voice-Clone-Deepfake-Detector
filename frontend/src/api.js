@@ -26,7 +26,7 @@ export async function analyzeAudioFile(file, filename) {
   const endpoint = API_BASE ? `${API_BASE}/analyze` : '/analyze';
   let response;
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 35000);
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
 
   try {
     response = await fetch(endpoint, {
@@ -37,7 +37,7 @@ export async function analyzeAudioFile(file, filename) {
   } catch (err) {
     if (err.name === 'AbortError') {
       throw new Error(
-        'Analysis request timed out after 35s. The cloud backend may still be completing a cold start. Please click "Try again".'
+        'Analysis request timed out after 60s. The cloud backend may be completing a cold start. Please click "Try again".'
       );
     }
     throw new Error(

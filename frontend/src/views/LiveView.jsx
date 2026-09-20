@@ -286,7 +286,18 @@ export default function LiveView({ onSaveReport, onNavigate }) {
       ws.binaryType = 'arraybuffer';
       socketRef.current = ws;
 
+      const connectTimeout = setTimeout(() => {
+        if (ws.readyState !== WebSocket.OPEN) {
+          try { ws.close(); } catch {}
+          cleanupResources();
+          updateStreamStatus('error');
+          setErrorType('disconnect');
+          setErrorMessage('Connecting to live streaming server timed out. If the cloud instance was asleep, it has now been awakened. Please click "Retry connection".');
+        }
+      }, 12000);
+
       ws.onopen = () => {
+        clearTimeout(connectTimeout);
         updateStreamStatus('listening');
         updateIsListening(true);
       };
@@ -305,14 +316,16 @@ export default function LiveView({ onSaveReport, onNavigate }) {
       };
 
       ws.onerror = (err) => {
+        clearTimeout(connectTimeout);
         console.error('WebSocket error:', err);
         cleanupResources();
         updateStreamStatus('error');
         setErrorType('disconnect');
-        setErrorMessage('WebSocket connection failed. Ensure backend server is running on port 8000.');
+        setErrorMessage('WebSocket connection failed. The backend service may be spinning up from sleep. Please try again.');
       };
 
       ws.onclose = (event) => {
+        clearTimeout(connectTimeout);
         if (isListeningRef.current || streamStatusRef.current === 'connecting' || streamStatusRef.current === 'listening') {
           cleanupResources();
           if (event.code === 1000) {
@@ -320,7 +333,7 @@ export default function LiveView({ onSaveReport, onNavigate }) {
           } else {
             updateStreamStatus('disconnected');
             setErrorType('disconnect');
-            setErrorMessage('WebSocket stream disconnected from server. Check that backend is running on port 8000.');
+            setErrorMessage('WebSocket stream disconnected from server. The backend may be temporarily busy. Please retry.');
           }
         }
       };

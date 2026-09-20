@@ -77,6 +77,12 @@ export default function App() {
     }
   };
 
+  // Eagerly ping backend /health to pre-warm the cloud instance on first page visit
+  useEffect(() => {
+    const warmupUrl = API_BASE ? `${API_BASE}/health` : '/health';
+    fetch(warmupUrl).catch(() => {});
+  }, []);
+
   const handleAnalyzeFile = async (fileOrClip, maybeClipMeta = null) => {
     const thisRequestId = ++requestIdRef.current;
     setIsLoading(true);
