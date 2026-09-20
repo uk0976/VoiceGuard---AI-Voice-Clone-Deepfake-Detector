@@ -123,11 +123,14 @@ def list_demo_clips():
     return {"clips": clips}
 
 
+MAX_FILE_SIZE = 25 * 1024 * 1024  # 25 MB ceiling to prevent memory exhaustion DoS
+
+
 @app.post("/analyze", response_model=AnalysisResponse)
 async def analyze_file(file: UploadFile = File(...)):
     """
     POST /analyze
-    Accepts multipart form file upload (.wav or .mp3)
+    Accepts multipart form file upload (.wav, .mp3, .ogg, .flac, .m4a)
     Returns:
     {
       "label": "likely_ai_generated" | "likely_real",
@@ -149,7 +152,12 @@ async def analyze_file(file: UploadFile = File(...)):
             )
 
     try:
-        content = await file.read()
+        content = await file.read(MAX_FILE_SIZE + 1)
+        if len(content) > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail="Payload too large. Maximum supported audio file size is 25 MB."
+            )
         if len(content) == 0:
             raise HTTPException(status_code=400, detail="Uploaded audio file is empty (0 bytes).")
 
@@ -276,6 +284,10 @@ async def websocket_stream(websocket: WebSocket):
                     continue
 
             if not data or len(data) < 200:
+                continue
+
+            if len(data) > 5 * 1024 * 1024:
+                logger.warning(f"Discarding oversized audio chunk ({len(data)} bytes) from {client_id}")
                 continue
 
             try:

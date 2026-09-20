@@ -103,8 +103,12 @@ def preprocess_audio(waveform: np.ndarray, sample_rate: int) -> np.ndarray:
         else:
             waveform = np.mean(waveform, axis=1)
 
+    # Sanitize any NaN or Inf samples from corrupt audio input
+    if np.any(np.isnan(waveform)) or np.any(np.isinf(waveform)):
+        waveform = np.nan_to_num(waveform, nan=0.0, posinf=1.0, neginf=-1.0)
+
     # Normalize audio if not normalized
-    max_val = np.max(np.abs(waveform))
+    max_val = np.max(np.abs(waveform)) if len(waveform) > 0 else 0.0
     if max_val > 1.0:
         waveform = waveform / (max_val + 1e-8)
 
