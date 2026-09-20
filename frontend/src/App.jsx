@@ -8,6 +8,7 @@ import LiveView from './views/LiveView';
 import SamplesView from './views/SamplesView';
 import HistoryView from './views/HistoryView';
 import ReportsView from './views/ReportsView';
+import DemoVideoView from './views/DemoVideoView';
 import HowItWorksView from './views/HowItWorksView';
 import DocumentationView from './views/DocumentationView';
 import FaqView from './views/FaqView';
@@ -249,6 +250,12 @@ export default function App() {
               onSelectClip={handleAnalyzeFile}
               isLoading={isLoading}
               selectedClipId={selectedClipId}
+            />
+          )}
+
+          {currentView === 'demo_video' && (
+            <DemoVideoView
+              onNavigate={setCurrentView}
             />
           )}
 

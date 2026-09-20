@@ -12,6 +12,7 @@ import {
   ExternalLink,
   HelpCircle,
   Scale,
+  Video,
   X
 } from 'lucide-react';
 
@@ -24,6 +25,7 @@ export default function Sidebar({ currentView, setCurrentView, isOpen, onClose }
         { id: 'analyze', label: 'Analyze Audio', icon: FileAudio },
         { id: 'live', label: 'Live Detection', icon: Radio },
         { id: 'samples', label: 'Demo Samples', icon: SlidersHorizontal },
+        { id: 'demo_video', label: 'Demo Video', icon: Video },
       ]
     },
     {

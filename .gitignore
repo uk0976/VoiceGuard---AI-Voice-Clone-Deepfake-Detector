@@ -37,3 +37,6 @@ checkpoints/
 Thumbs.db
 .vscode/
 .idea/
+
+# Large local media
+VoiceGuard Demo Clip.mp4
