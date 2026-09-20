@@ -44,8 +44,8 @@ def get_model_and_extractor():
     """
     global _FEATURE_EXTRACTOR, _MODEL, _DEVICE
 
-    # Enabled by default with dynamic INT8 quantization for minimal memory usage
-    enable_heavy = os.environ.get("ENABLE_HEAVY_TRANSFORMER", "1").strip().lower() not in ("0", "false", "no")
+    # On memory-constrained cloud instances (512MB), avoid loading the heavy 380MB transformer to prevent SIGKILL 502 crashes
+    enable_heavy = os.environ.get("ENABLE_HEAVY_TRANSFORMER", "0").strip().lower() in ("1", "true", "yes")
     if not enable_heavy:
         return None, None, None
 
@@ -149,19 +149,23 @@ def build_forensic_summary(
         )
 
         key_points = [
-            f"Neural Sequence Classification: Sequence-level latent representations match synthetic vocoder manifolds at {model_pct}% confidence."
+            f"Neural Sequence Classification: Latent acoustic representations indicate synthetic synthesis at {model_pct}% confidence."
         ]
 
-        if any("jitter" in f.lower() or "pitch" in f.lower() for f in heuristic_flags) or jitter < 0.018:
+        if any("jitter" in f.lower() or "pitch" in f.lower() for f in heuristic_flags) or jitter < 0.065:
             key_points.append(
-                f"Laryngeal Micro-Dynamics: Relative pitch jitter measured at {jitter:.4f} (abnormally flat, below organic biological threshold of 0.018)."
+                f"Laryngeal Micro-Dynamics: Relative pitch jitter measured at {jitter:.4f} (abnormally flat periodicity, below organic human baseline of 0.068)."
             )
         else:
             key_points.append(
                 f"Prosodic Pitch Contour: Pitch variation index measured at {f0_std:.4f}; voice exhibits synthetic smoothing between phonetic transitions."
             )
 
-        if any("flat" in f.lower() or "spectral" in f.lower() for f in heuristic_flags) or flatness > 0.035:
+        if any("centroid" in f.lower() or "vocoder" in f.lower() for f in heuristic_flags) or centroid > 1600.0:
+            key_points.append(
+                f"Vocoder Spectral Dispersion: Spectral centroid elevated to {centroid:.0f} Hz (exceeds natural human baseline ~1200 Hz), indicating neural vocoder synthesis."
+            )
+        elif any("flat" in f.lower() or "spectral" in f.lower() for f in heuristic_flags) or flatness > 0.035:
             key_points.append(
                 f"Spectral Density & Artifacts: Wiener entropy of {flatness:.4f} reveals vocoder phase reconstruction noise in upper frequencies."
             )
@@ -170,7 +174,7 @@ def build_forensic_summary(
                 f"Harmonic Structure: Frequency center-of-mass centered at {centroid:.0f} Hz with subtle neural phase quantization patterns."
             )
 
-        if pause_ratio < 0.15:
+        if pause_ratio < 0.30 or any("pause" in f.lower() or "breath" in f.lower() for f in heuristic_flags):
             key_points.append(
                 f"Temporal Respiration: Inhalation pause ratio is low ({pause_ratio * 100:.1f}%), indicating machine-generated continuous delivery without natural breath cycles."
             )
@@ -302,14 +306,15 @@ def analyze_audio(waveform: np.ndarray, sample_rate: int) -> Dict[str, Any]:
 
     # 4. Fusion logic:
     if model_score is not None:
-        if model_score >= 0.50:
-            synthetic_score = round(0.75 * model_score + 0.25 * max(model_score, heuristic_score), 4)
-        elif heuristic_score >= 0.80 and model_score >= 0.35:
-            synthetic_score = round(0.55 * heuristic_score + 0.45 * model_score, 4)
+        if len(heuristic_flags) >= 1:
+            # Acoustic forensic anomalies (vocoder centroid, rigid pitch, missing pauses) detected
+            synthetic_score = max(round(heuristic_score, 4), round(model_score, 4))
+        elif model_score >= 0.50:
+            synthetic_score = round(0.70 * model_score + 0.30 * heuristic_score, 4)
         else:
-            synthetic_score = round(0.80 * model_score + 0.20 * heuristic_score, 4)
+            synthetic_score = round(0.60 * model_score + 0.40 * heuristic_score, 4)
     else:
-        # Acoustic signal processing mode (jitter, spectral flatness, centroid)
+        # Acoustic signal processing mode (jitter, spectral flatness, centroid, pauses)
         synthetic_score = round(heuristic_score, 4)
         model_score = round(heuristic_score, 4)
 
