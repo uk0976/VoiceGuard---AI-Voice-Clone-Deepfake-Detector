@@ -18,6 +18,7 @@ import {
   BookmarkPlus
 } from 'lucide-react';
 import { downloadForensicPdf } from '../utils/pdfGenerator';
+import { API_BASE } from '../api';
 
 export default function LiveView({ onSaveReport, onNavigate }) {
   const [isListening, setIsListening] = useState(false);
@@ -44,6 +45,8 @@ export default function LiveView({ onSaveReport, onNavigate }) {
   const canvasRef = useRef(null);
   const animationFrameRef = useRef(null);
   const sampleBufferRef = useRef([]);
+  const lastLevelUpdateRef = useRef(0);
+  const flushIntervalRef = useRef(null);
 
   const evaluateLiveStreamSession = (chunks, elapsedSec) => {
     const totalChunks = chunks.length;
@@ -261,7 +264,7 @@ export default function LiveView({ onSaveReport, onNavigate }) {
 
       let wsUrl = import.meta.env.VITE_WS_URL;
       if (!wsUrl) {
-        const apiUrl = import.meta.env.VITE_API_URL;
+        const apiUrl = import.meta.env.VITE_API_URL || API_BASE;
         if (apiUrl) {
           try {
             const parsed = new URL(apiUrl);
@@ -272,9 +275,10 @@ export default function LiveView({ onSaveReport, onNavigate }) {
           }
         } else {
           const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-          const wsHost = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? '127.0.0.1' : window.location.hostname;
-          const wsPort = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? ':8000' : (window.location.port ? `:${window.location.port}` : '');
-          wsUrl = `${wsProtocol}//${wsHost}${wsPort}/ws/stream`;
+          const wsHost = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? '127.0.0.1:8000'
+            : 'voiceguard-ai-voice-clone-deepfake.onrender.com';
+          wsUrl = `${wsProtocol}//${wsHost}/ws/stream`;
         }
       }
 
@@ -339,7 +343,7 @@ export default function LiveView({ onSaveReport, onNavigate }) {
       analyserRef.current = analyser;
       source.connect(analyser);
 
-      // Restrained waveform draw loop
+      // Restrained waveform draw loop with throttled React state updates
       const drawWaveform = () => {
         if (!canvasRef.current || !analyserRef.current) return;
         const canvas = canvasRef.current;
@@ -353,7 +357,13 @@ export default function LiveView({ onSaveReport, onNavigate }) {
           sum += dataArray[i];
         }
         const avg = sum / bufferLength;
-        setAudioLevel(Math.min(100, Math.round((avg / 48) * 100)));
+
+        // Throttle React state update to ~8Hz to prevent main-thread event starvation
+        const now = performance.now();
+        if (now - lastLevelUpdateRef.current > 120) {
+          lastLevelUpdateRef.current = now;
+          setAudioLevel(Math.min(100, Math.round((avg / 48) * 100)));
+        }
 
         ctx.fillStyle = '#080B10';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -388,18 +398,37 @@ export default function LiveView({ onSaveReport, onNavigate }) {
       const bufferSize = 4096;
       const processor = audioCtx.createScriptProcessor(bufferSize, 1, 1);
       processorRef.current = processor;
+      window.__voiceguard_processor = processor; // Prevent V8 garbage collection
+
+      // Route via a muted gain node to destination to keep pipeline alive without speaker feedback
+      const silentGain = audioCtx.createGain();
+      silentGain.gain.value = 0;
+      processor.connect(silentGain);
+      silentGain.connect(audioCtx.destination);
       source.connect(processor);
-      processor.connect(audioCtx.destination);
 
       sampleBufferRef.current = [];
       const nativeSr = audioCtx.sampleRate;
       const targetSr = 16000;
-      const targetChunkDuration = 1.5;
-      const targetSampleCount = targetSr * targetChunkDuration; // 24000 samples
+      const targetChunkDuration = 1.0; // Responsive 1.0s analysis window
+      const targetSampleCount = targetSr * targetChunkDuration; // 16000 samples
+
+      const dispatchSlice = () => {
+        if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) return;
+        if (sampleBufferRef.current.length < targetSampleCount) return;
+
+        const chunkSamples = sampleBufferRef.current.slice(0, targetSampleCount);
+        sampleBufferRef.current = sampleBufferRef.current.slice(targetSampleCount);
+
+        const wavBuffer = encodeWavChunk(chunkSamples, targetSr);
+        try {
+          socketRef.current.send(wavBuffer);
+        } catch (sendErr) {
+          console.error('Failed to send audio chunk:', sendErr);
+        }
+      };
 
       processor.onaudioprocess = (e) => {
-        if (ws.readyState !== WebSocket.OPEN) return;
-
         const inputData = e.inputBuffer.getChannelData(0);
         const ratio = nativeSr / targetSr;
         const newLength = Math.round(inputData.length / ratio);
@@ -410,17 +439,17 @@ export default function LiveView({ onSaveReport, onNavigate }) {
         }
 
         if (sampleBufferRef.current.length >= targetSampleCount) {
-          const chunkSamples = sampleBufferRef.current.slice(0, targetSampleCount);
-          sampleBufferRef.current = sampleBufferRef.current.slice(targetSampleCount);
-
-          const wavBuffer = encodeWavChunk(chunkSamples, targetSr);
-          try {
-            ws.send(wavBuffer);
-          } catch (sendErr) {
-            console.error('Failed to send audio chunk:', sendErr);
-          }
+          dispatchSlice();
         }
       };
+
+      // Periodic watchdog interval (every 1000ms): guarantees chunks dispatch continuously
+      flushIntervalRef.current = setInterval(() => {
+        if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) return;
+        if (sampleBufferRef.current.length >= targetSampleCount) {
+          dispatchSlice();
+        }
+      }, 1000);
 
     } catch (err) {
       console.error('Microphone initialization error:', err);
@@ -445,6 +474,11 @@ export default function LiveView({ onSaveReport, onNavigate }) {
   const cleanupResources = () => {
     updateIsListening(false);
 
+    if (flushIntervalRef.current) {
+      clearInterval(flushIntervalRef.current);
+      flushIntervalRef.current = null;
+    }
+
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
@@ -453,6 +487,10 @@ export default function LiveView({ onSaveReport, onNavigate }) {
     if (processorRef.current) {
       processorRef.current.disconnect();
       processorRef.current = null;
+    }
+
+    if (window.__voiceguard_processor) {
+      window.__voiceguard_processor = null;
     }
 
     if (mediaStreamRef.current) {
@@ -685,7 +723,7 @@ export default function LiveView({ onSaveReport, onNavigate }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 10px', backgroundColor: 'var(--surface-secondary)', borderRadius: 'var(--radius-sm)' }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Chunks Received</span>
               <span className="mono" style={{ fontSize: '0.75rem', color: chunkCount > 0 ? 'var(--accent-cyan)' : 'var(--text-muted)' }}>
-                {chunkCount > 0 ? `${chunkCount} slices` : isListening ? 'Buffering 1.5s slice...' : '--'}
+                {chunkCount > 0 ? `${chunkCount} slices` : isListening ? 'Buffering 1.0s slice...' : '--'}
               </span>
             </div>
 
@@ -698,7 +736,7 @@ export default function LiveView({ onSaveReport, onNavigate }) {
           </div>
 
           <p style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
-            Inference executes in sliding 1.5s windows with 5-frame rolling average smoothing.
+            Inference executes in sliding 1.0s windows with 5-frame rolling average smoothing.
           </p>
         </div>
 

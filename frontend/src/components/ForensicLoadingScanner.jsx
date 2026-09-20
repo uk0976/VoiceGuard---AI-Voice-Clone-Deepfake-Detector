@@ -44,7 +44,8 @@ export default function ForensicLoadingScanner({ filename = "audio_clip.wav" }) 
         if (seconds < 5) return Math.min(58, prev + 2);
         if (seconds < 10) return Math.min(82, prev + 1.2);
         if (seconds < 20) return Math.min(94, prev + 0.5);
-        return Math.min(98, prev + 0.1);
+        if (seconds < 30) return Math.min(97, prev + 0.2);
+        return Math.min(99, prev + 0.05);
       });
     }, 200);
 

@@ -125,6 +125,9 @@ export default function App() {
           const fallbackUrl = API_BASE ? `${API_BASE}/demo_clips/${clipMeta.filename}` : `/demo_clips/${clipMeta.filename}`;
           res = await fetch(fallbackUrl);
         }
+        if (!res || !res.ok) {
+          throw new Error(`Could not load demo clip "${clipMeta.filename}" (HTTP ${res?.status || 'network error'}).`);
+        }
         const blob = await res.blob();
         fileToAnalyze = new File([blob], clipMeta.filename, { type: 'audio/wav' });
         if (thisRequestId === requestIdRef.current) {

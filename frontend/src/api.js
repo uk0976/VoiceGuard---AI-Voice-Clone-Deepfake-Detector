@@ -1,3 +1,5 @@
+const DEFAULT_PROD_API = 'https://voiceguard-ai-voice-clone-deepfake.onrender.com';
+
 let rawApi = import.meta.env.VITE_API_URL;
 if (rawApi) {
   if (!rawApi.startsWith('http://') && !rawApi.startsWith('https://')) {
@@ -9,7 +11,7 @@ if (rawApi) {
 export const API_BASE = rawApi || 
   (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
     ? 'http://127.0.0.1:8000' 
-    : '');
+    : DEFAULT_PROD_API);
 
 /**
  * Uploads an audio file (.wav or .mp3) to POST /analyze
@@ -23,15 +25,26 @@ export async function analyzeAudioFile(file, filename) {
 
   const endpoint = API_BASE ? `${API_BASE}/analyze` : '/analyze';
   let response;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 35000);
+
   try {
     response = await fetch(endpoint, {
       method: 'POST',
       body: formData,
+      signal: controller.signal,
     });
   } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new Error(
+        'Analysis request timed out after 35s. The cloud backend may still be completing a cold start. Please click "Try again".'
+      );
+    }
     throw new Error(
       'Could not connect to the VoiceGuard backend service. If the cloud instance was idling, please wait 15–25 seconds for it to spin up and try again.'
     );
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   const contentType = response.headers.get('content-type') || '';
