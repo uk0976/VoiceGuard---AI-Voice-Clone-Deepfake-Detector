@@ -12,7 +12,7 @@ import DocumentationView from './views/DocumentationView';
 import FaqView from './views/FaqView';
 import TermsView from './views/TermsView';
 import SplashScreen from './components/SplashScreen';
-import { analyzeAudioFile } from './api';
+import { analyzeAudioFile, API_BASE } from './api';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -75,24 +75,68 @@ export default function App() {
     }
   };
 
-  const handleAnalyzeFile = async (file, clipMeta = null) => {
+  const handleAnalyzeFile = async (fileOrClip, maybeClipMeta = null) => {
     const thisRequestId = ++requestIdRef.current;
-    setActiveFile(file);
     setIsLoading(true);
     setErrorMessage(null);
     setAnalysisResult(null);
 
-    // If analyzed from another view (e.g. samples), switch to the analyze view
+    // 1. Instantly navigate to the Analyze Audio workstation
     setCurrentView('analyze');
 
-    if (clipMeta) {
+    let fileToAnalyze = null;
+    let clipMeta = null;
+
+    if (fileOrClip instanceof Blob) {
+      fileToAnalyze = fileOrClip;
+      clipMeta = maybeClipMeta;
+      setActiveFile(fileOrClip);
+      setSelectedClipId(clipMeta?.id || null);
+    } else if (fileOrClip && fileOrClip.filename) {
+      // Direct sample clicked from Demo Samples
+      clipMeta = fileOrClip;
       setSelectedClipId(clipMeta.id);
-    } else {
-      setSelectedClipId(null);
+
+      // Instantly set placeholder activeFile so AnalyzeView immediately renders the file card and audio details
+      const demoAudioUrl = `/demo_clips/${clipMeta.filename}`;
+      const placeholder = {
+        name: clipMeta.filename,
+        size: clipMeta.size ? (parseInt(clipMeta.size) * 1024 || 250000) : 250000,
+        type: 'audio/wav',
+        duration: clipMeta.duration,
+        url: demoAudioUrl
+      };
+      setActiveFile(placeholder);
     }
 
+    // Guarantee minimum inspection visualization time (2.6s) so user experiences the live real-time analysis
+    const delayPromise = new Promise((resolve) => setTimeout(resolve, 2600));
+
     try {
-      const result = await analyzeAudioFile(file, file.name);
+      // If we don't have the File blob yet (from Demo Samples click), fetch it now
+      if (!fileToAnalyze && clipMeta) {
+        let res;
+        try {
+          res = await fetch(`/demo_clips/${clipMeta.filename}`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        } catch {
+          const fallbackUrl = API_BASE ? `${API_BASE}/demo_clips/${clipMeta.filename}` : `/demo_clips/${clipMeta.filename}`;
+          res = await fetch(fallbackUrl);
+        }
+        const blob = await res.blob();
+        fileToAnalyze = new File([blob], clipMeta.filename, { type: 'audio/wav' });
+        if (thisRequestId === requestIdRef.current) {
+          setActiveFile(fileToAnalyze);
+        }
+      }
+
+      if (!fileToAnalyze) {
+        throw new Error('No audio file provided for analysis.');
+      }
+
+      const analyzePromise = analyzeAudioFile(fileToAnalyze, fileToAnalyze.name);
+      const [result] = await Promise.all([analyzePromise, delayPromise]);
+
       if (thisRequestId === requestIdRef.current) {
         setAnalysisResult(result);
 
@@ -100,9 +144,9 @@ export default function App() {
         const repId = `REP-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`;
         const reportEntry = {
           id: repId,
-          filename: file.name || 'voice_recording.wav',
+          filename: fileToAnalyze.name || 'voice_recording.wav',
           timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC',
-          duration: clipMeta?.duration || (file.duration ? `${file.duration}s` : '--'),
+          duration: clipMeta?.duration || (fileToAnalyze.duration ? `${fileToAnalyze.duration}s` : '--'),
           label: result.label,
           confidence: result.confidence,
           model_score: result.model_score,

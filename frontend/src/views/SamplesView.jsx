@@ -100,29 +100,14 @@ export default function SamplesView({ onSelectClip, isLoading, selectedClipId })
     }
   };
 
-  const handleAnalyze = async (clip) => {
+  const handleAnalyze = (clip) => {
     if (isLoading) return;
-    setLoadingClipId(clip.id);
-
-    try {
-      let res;
-      try {
-        res = await fetch(getAudioUrl(clip.filename));
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      } catch {
-        const fallbackUrl = API_BASE ? `${API_BASE}/demo_clips/${clip.filename}` : `/demo_clips/${clip.filename}`;
-        res = await fetch(fallbackUrl);
-      }
-
-      const blob = await res.blob();
-      const file = new File([blob], clip.filename, { type: 'audio/wav' });
-
-      await onSelectClip(file, clip);
-    } catch (err) {
-      console.error('Failed to load sample clip:', err);
-    } finally {
-      setLoadingClipId(null);
+    if (playingId && audioElements[playingId]) {
+      audioElements[playingId].pause();
+      setPlayingId(null);
     }
+    // Instantly transition to the Analyze workstation to display live real-time analysis
+    onSelectClip(clip);
   };
 
   const filteredClips = clips.filter((clip) => {

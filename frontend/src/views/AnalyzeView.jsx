@@ -43,24 +43,37 @@ export default function AnalyzeView({ onAnalyze, isLoading, error, result, activ
   const validateAndSetFile = (file) => {
     if (!file) return;
     setSelectedFile(file);
-    if (audioUrl) {
-      URL.revokeObjectURL(audioUrl);
+    if (audioUrl && audioUrl.startsWith('blob:')) {
+      try {
+        URL.revokeObjectURL(audioUrl);
+      } catch {}
     }
 
-    const isAudio = file.type?.startsWith('audio/') || /\.(wav|mp3|m4a|ogg|flac|aac)$/i.test(file.name || '');
-    if (!isAudio) {
-      setFileWarning(`"${file.name}" is not a supported audio format. Supported: .wav, .mp3, .m4a, .ogg.`);
-      setAudioUrl(null);
-    } else if (file.size === 0) {
-      setFileWarning(`"${file.name}" is empty (0 bytes). Please select a valid recording.`);
-      setAudioUrl(null);
-    } else if (file.size > 25 * 1024 * 1024) {
-      setFileWarning(`File size exceeds 25MB limit.`);
-      setAudioUrl(null);
+    if (file instanceof Blob) {
+      const isAudio = file.type?.startsWith('audio/') || /\.(wav|mp3|m4a|ogg|flac|aac)$/i.test(file.name || '');
+      if (!isAudio) {
+        setFileWarning(`"${file.name}" is not a supported audio format. Supported: .wav, .mp3, .m4a, .ogg.`);
+        setAudioUrl(null);
+      } else if (file.size === 0) {
+        setFileWarning(`"${file.name}" is empty (0 bytes). Please select a valid recording.`);
+        setAudioUrl(null);
+      } else if (file.size > 25 * 1024 * 1024) {
+        setFileWarning(`File size exceeds 25MB limit.`);
+        setAudioUrl(null);
+      } else {
+        setFileWarning(null);
+        try {
+          const url = URL.createObjectURL(file);
+          setAudioUrl(url);
+        } catch (e) {
+          console.warn('Could not create ObjectURL:', e);
+        }
+      }
     } else {
       setFileWarning(null);
-      const url = URL.createObjectURL(file);
-      setAudioUrl(url);
+      if (file.url) {
+        setAudioUrl(file.url);
+      }
     }
   };
 
