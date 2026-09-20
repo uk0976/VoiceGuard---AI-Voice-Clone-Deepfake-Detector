@@ -3,7 +3,7 @@
 </p>
 
 <h1 align="center">VoiceGuard</h1>
-<h3 align="center">AI/Clone Voice and Deepfake Detector</h3>
+<h3 align="center">AI Voice Clone Deepfake Detector</h3>
 
 <p align="center">
   <em>"Real Voices. A Safer Tomorrow."</em>
