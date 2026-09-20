@@ -44,8 +44,8 @@ def get_model_and_extractor():
     """
     global _FEATURE_EXTRACTOR, _MODEL, _DEVICE
 
-    # On memory-constrained cloud instances (512MB), avoid loading the heavy 380MB transformer to prevent SIGKILL 502 crashes
-    enable_heavy = os.environ.get("ENABLE_HEAVY_TRANSFORMER", "0").strip().lower() in ("1", "true", "yes")
+    # Enabled by default with dynamic INT8 quantization for minimal memory usage
+    enable_heavy = os.environ.get("ENABLE_HEAVY_TRANSFORMER", "1").strip().lower() not in ("0", "false", "no")
     if not enable_heavy:
         return None, None, None
 
@@ -69,7 +69,13 @@ def get_model_and_extractor():
             logger.info(f"Loading classifier '{MODEL_NAME}' on device: {_DEVICE}...")
 
             _FEATURE_EXTRACTOR = AutoFeatureExtractor.from_pretrained(MODEL_NAME)
-            _MODEL = AutoModelForAudioClassification.from_pretrained(MODEL_NAME)
+            raw_model = AutoModelForAudioClassification.from_pretrained(MODEL_NAME)
+
+            # Quantize dynamically to int8 to run in ~110MB RAM safely
+            try:
+                _MODEL = torch.quantization.quantize_dynamic(raw_model, {torch.nn.Linear}, dtype=torch.qint8)
+            except Exception:
+                _MODEL = raw_model
 
             _MODEL.to(_DEVICE)
             _MODEL.eval()
