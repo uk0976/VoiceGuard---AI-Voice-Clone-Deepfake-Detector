@@ -40,7 +40,7 @@ export default function HowItWorksView() {
       num: '04',
       title: 'Acoustic heuristic verification layer',
       icon: Radio,
-      summary: 'Physical signal heuristics validate the neural model output to provide explainability and acoustic defense.',
+      summary: 'Physical signal heuristics validate the neural model output to provide explainability and acoustic detection.',
       details: [
         'Acoustic compensation: Counteracts room transmission acoustics and speaker-to-mic degradation where neural weights may attenuate.',
         'Explainability flags: Identifies specific physical anomalies such as "Unnatural pitch steadiness", "Elevated spectral flatness", or "Missing breath pauses".'

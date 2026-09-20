@@ -3,7 +3,7 @@
 </p>
 
 <h1 align="center">VoiceGuard</h1>
-<h3 align="center">AI Voice Clone & Deepfake Forensic Defense Platform</h3>
+<h3 align="center">AI/Clone Voice and Deepfake Detector</h3>
 
 <p align="center">
   <em>"Real Voices. A Safer Tomorrow."</em>
@@ -80,7 +80,7 @@ Modern generative text-to-speech (TTS) and voice conversion models (e.g., Eleven
 - **Executive Authorization Fraud**: CEO audio deepfakes authorizing fraudulent banking and wire transactions.
 - **Automated Social Engineering**: High-scale robocalls circumventing traditional IVR security.
 
-Traditional spam filters and human ears fail against high-fidelity neural vocoders. **VoiceGuard fills this defense gap** with instant, explainable, and privacy-first acoustic analysis.
+Traditional spam filters and human ears fail against high-fidelity neural vocoders. **VoiceGuard fills this detection gap** with instant, explainable, and privacy-first acoustic analysis.
 
 ---
 
@@ -88,7 +88,7 @@ Traditional spam filters and human ears fail against high-fidelity neural vocode
 
 | Capability | Technical Implementation | Value |
 | :--- | :--- | :--- |
-| **Dual-Engine Fusion** | Pretrained sequence classification + multi-band acoustic DSP | Defense against both known and out-of-distribution neural vocoders |
+| **Dual-Engine Fusion** | Pretrained sequence classification + multi-band acoustic DSP | Detection against both known and out-of-distribution neural vocoders |
 | **Continuous Calibrated Probabilities** | Logit temperature scaling ($T = 3.0$) | Eliminates false 100% / 0% saturation; displays honest confidence |
 | **Real-Time Live Mic Streaming** | Sub-second rolling WebSockets + VAD silence gating | Continuous call center, security checkpoint, and conversation screening |
 | **Dynamic Forensic Summaries** | Diagnostic synthesis engine extracting exact acoustic metrics | Clear, human-readable explanations citing jitter, entropy, and respiration |

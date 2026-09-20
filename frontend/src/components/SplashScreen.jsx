@@ -141,7 +141,7 @@ export default function SplashScreen({ onComplete }) {
             marginBottom: '28px'
           }}
         >
-          AI Voice Clone & Deepfake Forensic Defense Platform
+          AI/Clone Voice and Deepfake Detector
         </div>
 
         {/* Initializing Progress Indicator */}

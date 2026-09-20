@@ -245,7 +245,7 @@ VoiceGuard employs temperature-calibrated softmax scaling (T = 3.0) on the seque
           <FileText size={20} color="#F59E0B" style={{ flexShrink: 0, marginTop: '2px' }} />
           <div>
             <div style={{ fontSize: '0.8125rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '2px' }}>
-              Forensic Audit Defense
+              Forensic Audit Detection
             </div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
               Audit-ready PDF reports with SHA-256 cryptographic verification and full acoustic telemetry records.

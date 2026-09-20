@@ -88,7 +88,7 @@ export default function Sidebar({ currentView, setCurrentView, isOpen, onClose }
             cursor: 'pointer',
             flex: 1
           }}
-          title="VoiceGuard — Audio Authenticity Platform"
+          title="VoiceGuard — AI/Clone Voice and Deepfake Detector"
         >
           <div
             style={{
