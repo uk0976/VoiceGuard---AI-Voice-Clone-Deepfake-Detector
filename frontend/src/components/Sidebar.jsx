@@ -11,10 +11,11 @@ import {
   SlidersHorizontal,
   ExternalLink,
   HelpCircle,
-  Scale
+  Scale,
+  X
 } from 'lucide-react';
 
-export default function Sidebar({ currentView, setCurrentView }) {
+export default function Sidebar({ currentView, setCurrentView, isOpen, onClose }) {
   const navSections = [
     {
       title: 'OVERVIEW',
@@ -50,6 +51,7 @@ export default function Sidebar({ currentView, setCurrentView }) {
 
   return (
     <aside
+      className={`sidebar-container ${isOpen ? 'open' : ''}`}
       style={{
         width: '236px',
         backgroundColor: 'var(--surface-sidebar)',
@@ -65,48 +67,72 @@ export default function Sidebar({ currentView, setCurrentView }) {
     >
       {/* Brand Header */}
       <div
-        onClick={() => setCurrentView('overview')}
         style={{
           padding: '16px',
           borderBottom: '1px solid var(--border-subtle)',
           display: 'flex',
           alignItems: 'center',
-          gap: '10px',
-          cursor: 'pointer',
-          transition: 'background-color 0.15s ease'
+          justifyContent: 'space-between',
+          gap: '10px'
         }}
-        title="VoiceGuard — Audio Authenticity Platform"
       >
         <div
+          onClick={() => {
+            setCurrentView('overview');
+            if (onClose) onClose();
+          }}
           style={{
-            width: '34px',
-            height: '34px',
-            borderRadius: '9px',
-            backgroundColor: '#000000',
-            border: '1px solid rgba(34, 167, 214, 0.4)',
-            boxShadow: '0 0 10px rgba(34, 167, 214, 0.25)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
-            padding: 0,
-            flexShrink: 0
+            gap: '10px',
+            cursor: 'pointer',
+            flex: 1
           }}
+          title="VoiceGuard — Audio Authenticity Platform"
         >
-          <img
-            src="/logo.png"
-            alt="VoiceGuard Logo"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-          />
-        </div>
-        <div>
-          <div style={{ fontSize: '0.9375rem', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
-            VoiceGuard
+          <div
+            style={{
+              width: '34px',
+              height: '34px',
+              borderRadius: '9px',
+              backgroundColor: '#000000',
+              border: '1px solid rgba(34, 167, 214, 0.4)',
+              boxShadow: '0 0 10px rgba(34, 167, 214, 0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden',
+              padding: 0,
+              flexShrink: 0
+            }}
+          >
+            <img
+              src="/logo.png"
+              alt="VoiceGuard Logo"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
           </div>
-          <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
-            Real Voices. A Safer Tomorrow.
+          <div>
+            <div style={{ fontSize: '0.9375rem', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+              VoiceGuard
+            </div>
+            <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
+              Real Voices. A Safer Tomorrow.
+            </div>
           </div>
         </div>
+
+        {/* Mobile Close Button */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="mobile-menu-btn"
+            style={{ margin: 0, padding: '4px' }}
+            title="Close navigation"
+          >
+            <X size={18} />
+          </button>
+        )}
       </div>
 
       {/* Navigation Sections */}
@@ -134,7 +160,10 @@ export default function Sidebar({ currentView, setCurrentView }) {
                 return (
                   <button
                     key={item.id}
-                    onClick={() => setCurrentView(item.id)}
+                    onClick={() => {
+                      setCurrentView(item.id);
+                      if (onClose) onClose();
+                    }}
                     className={`nav-item ${isActive ? 'active' : ''}`}
                   >
                     <Icon size={15} color={isActive ? 'var(--accent-cyan)' : 'var(--text-muted)'} />

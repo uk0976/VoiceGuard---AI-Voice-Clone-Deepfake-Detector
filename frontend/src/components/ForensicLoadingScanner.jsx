@@ -77,9 +77,8 @@ export default function ForensicLoadingScanner({ filename = "audio_clip.wav" }) 
 
   return (
     <div 
-      className="vg-panel" 
+      className="vg-panel forensic-scanner-panel" 
       style={{
-        padding: '28px 24px',
         marginBottom: '24px',
         border: '1px solid var(--accent-cyan)',
         boxShadow: '0 0 25px rgba(34, 167, 214, 0.15)',
@@ -216,9 +215,9 @@ export default function ForensicLoadingScanner({ filename = "audio_clip.wav" }) 
           display: 'flex',
           alignItems: 'flex-end',
           justifyContent: 'center',
-          gap: '4px',
+          gap: '3px',
           height: '42px',
-          padding: '4px 12px',
+          padding: '4px 8px',
           backgroundColor: 'rgba(0, 0, 0, 0.35)',
           borderRadius: '6px',
           border: '1px solid var(--border-subtle)',

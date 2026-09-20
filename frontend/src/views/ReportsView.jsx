@@ -131,7 +131,8 @@ export default function ReportsView({ reports = [], onDeleteReport, onClearRepor
             </span>
           </div>
 
-          <table className="vg-table">
+          <div className="vg-table-container">
+            <table className="vg-table">
             <thead>
               <tr>
                 <th>Report ID</th>
@@ -211,7 +212,8 @@ export default function ReportsView({ reports = [], onDeleteReport, onClearRepor
                 );
               })}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
       )}
     </div>

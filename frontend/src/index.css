@@ -402,3 +402,209 @@ h3, .h3 {
   }
 }
 
+/* ==========================================================================
+   Responsive Layout & Mobile Adaptation
+   ========================================================================== */
+
+.app-main-viewport {
+  flex: 1;
+  padding: 28px 32px;
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Horizontal scroll container for tables on smaller screens */
+.vg-table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.forensic-scanner-panel {
+  padding: 28px 24px;
+}
+
+@media (max-width: 640px) {
+  .forensic-scanner-panel {
+    padding: 18px 14px;
+  }
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+.mobile-bottom-nav {
+  display: none;
+}
+
+.mobile-menu-btn {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Main Container */
+  .app-main-viewport {
+    padding: 16px 14px 76px 14px; /* clearance for mobile bottom bar */
+  }
+
+  /* Responsive Typography Scale */
+  h1, .h1 {
+    font-size: 1.35rem;
+  }
+  h2, .h2 {
+    font-size: 1.15rem;
+  }
+  h3, .h3 {
+    font-size: 0.9375rem;
+  }
+
+  /* Panels */
+  .vg-panel {
+    padding: 14px;
+    border-radius: var(--radius-card);
+  }
+
+  /* Metrics Grid */
+  .metric-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .metric-item {
+    padding: 12px 14px;
+  }
+  .metric-value {
+    font-size: 1.25rem;
+  }
+
+  /* Dropzone */
+  .upload-dropzone {
+    padding: 28px 14px;
+  }
+
+  /* Data Tables: retain clean columns with smooth touch scroll */
+  .vg-table {
+    min-width: 540px;
+  }
+
+  /* Sidebar Off-Canvas Drawer on Mobile */
+  .sidebar-container {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    z-index: 100 !important;
+    height: 100vh !important;
+    width: 270px !important;
+    max-width: 80vw !important;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+  }
+
+  .sidebar-container.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 99;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .sidebar-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Hamburger button in TopBar */
+  .mobile-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    background-color: var(--surface-secondary);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    cursor: pointer;
+    margin-right: 8px;
+    transition: background-color 0.15s ease;
+  }
+
+  .mobile-menu-btn:active {
+    background-color: var(--surface-hover);
+  }
+
+  /* Bottom Navigation Bar on Mobile */
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 58px;
+    background-color: rgba(11, 15, 20, 0.96);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border-subtle);
+    z-index: 40;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 4px;
+    box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.5);
+  }
+
+  .mobile-bottom-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    height: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.625rem;
+    font-weight: 500;
+    gap: 3px;
+    cursor: pointer;
+    transition: color 0.15s ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-bottom-tab.active {
+    color: var(--accent-cyan);
+    font-weight: 600;
+  }
+
+  .mobile-bottom-tab:active {
+    opacity: 0.7;
+  }
+
+  /* Utility to hide verbose desktop elements on mobile */
+  .topbar-desktop-only {
+    display: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .metric-row {
+    grid-template-columns: 1fr;
+  }
+
+  .app-main-viewport {
+    padding: 14px 10px 76px 10px;
+  }
+}
+

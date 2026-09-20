@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshCw, ExternalLink } from 'lucide-react';
+import { RefreshCw, Menu } from 'lucide-react';
 
 function GithubIcon({ size = 16 }) {
   return (
@@ -9,7 +9,7 @@ function GithubIcon({ size = 16 }) {
   );
 }
 
-export default function TopBar({ currentView, onReset, hasResult }) {
+export default function TopBar({ currentView, onReset, hasResult, onToggleSidebar }) {
   const titles = {
     overview: 'Voice Authenticity Overview',
     analyze: 'Audio File Inspection',
@@ -32,30 +32,50 @@ export default function TopBar({ currentView, onReset, hasResult }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 24px',
+        padding: '0 16px',
         position: 'sticky',
         top: 0,
         zIndex: 20
       }}
     >
-      {/* Current View Title */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>Workstation /</span>
-        <h2 style={{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--text-primary)' }}>
+      {/* Left: Mobile Drawer Button & Current View Title */}
+      <div style={{ display: 'flex', alignItems: 'center', minWidth: 0, gap: '6px' }}>
+        {onToggleSidebar && (
+          <button
+            onClick={onToggleSidebar}
+            className="mobile-menu-btn"
+            title="Open navigation menu"
+          >
+            <Menu size={18} />
+          </button>
+        )}
+        <span className="topbar-desktop-only" style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+          Workstation /
+        </span>
+        <h2 
+          style={{ 
+            fontSize: '0.875rem', 
+            fontWeight: '600', 
+            color: 'var(--text-primary)',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}
+        >
           {titles[currentView] || 'VoiceGuard'}
         </h2>
       </div>
 
       {/* Right Metadata & Tools */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-          <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--color-human)' }} />
-          <span>Model ready</span>
+          <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--color-human)', flexShrink: 0 }} />
+          <span className="topbar-desktop-only">Model ready</span>
         </div>
 
-        <span style={{ color: 'var(--border-strong)' }}>|</span>
+        <span className="topbar-desktop-only" style={{ color: 'var(--border-strong)' }}>|</span>
 
-        <span className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+        <span className="mono topbar-desktop-only" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
           v2.4.1
         </span>
 
@@ -63,11 +83,11 @@ export default function TopBar({ currentView, onReset, hasResult }) {
           <button
             onClick={onReset}
             className="btn-secondary"
-            style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+            style={{ padding: '4px 8px', fontSize: '0.75rem' }}
             title="Clear current analysis"
           >
             <RefreshCw size={12} />
-            Reset
+            <span className="topbar-desktop-only">Reset</span>
           </button>
         )}
 

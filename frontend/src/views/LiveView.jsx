@@ -951,7 +951,8 @@ export default function LiveView({ onSaveReport, onNavigate }) {
           </p>
         </div>
 
-        <table className="vg-table">
+        <div className="vg-table-container">
+          <table className="vg-table">
           <thead>
             <tr>
               <th>Signal</th>
@@ -1022,6 +1023,7 @@ export default function LiveView({ onSaveReport, onNavigate }) {
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

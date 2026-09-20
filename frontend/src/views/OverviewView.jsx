@@ -158,70 +158,72 @@ export default function OverviewView({ onNavigate, onSelectDemoClip, reports = [
             </button>
           </div>
         ) : (
-          <table className="vg-table">
-            <thead>
-              <tr>
-                <th>File Name</th>
-                <th>Signal Type</th>
-                <th>Result</th>
-                <th>Confidence</th>
-                <th>Duration</th>
-                <th>Analyzed (UTC)</th>
-                <th style={{ textAlign: 'right' }}>Forensic Report</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentAnalyses.map((item) => {
-                const isFake = item.label === 'likely_ai_generated';
-                const rawConf = item.confidence || 0;
-                const confVal = (!isFake && rawConf < 0.5 ? 1 - rawConf : rawConf) * 100;
-                const confPercent = confVal % 1 === 0 ? confVal.toFixed(0) : confVal.toFixed(1);
-                const ext = (item.filename?.split('.').pop() || 'wav').toUpperCase();
+          <div className="vg-table-container">
+            <table className="vg-table">
+              <thead>
+                <tr>
+                  <th>File Name</th>
+                  <th>Signal Type</th>
+                  <th>Result</th>
+                  <th>Confidence</th>
+                  <th>Duration</th>
+                  <th>Analyzed (UTC)</th>
+                  <th style={{ textAlign: 'right' }}>Forensic Report</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentAnalyses.map((item) => {
+                  const isFake = item.label === 'likely_ai_generated';
+                  const rawConf = item.confidence || 0;
+                  const confVal = (!isFake && rawConf < 0.5 ? 1 - rawConf : rawConf) * 100;
+                  const confPercent = confVal % 1 === 0 ? confVal.toFixed(0) : confVal.toFixed(1);
+                  const ext = (item.filename?.split('.').pop() || 'wav').toUpperCase();
 
-                return (
-                  <tr key={item.id}>
-                    <td style={{ fontWeight: '500', color: 'var(--text-primary)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <FileAudio size={14} color="var(--text-muted)" />
-                        <span className="mono">{item.filename}</span>
-                      </div>
-                    </td>
-                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>Audio ({ext})</td>
-                    <td>
-                      {isFake ? (
-                        <span className="badge-status badge-ai">
-                          <ShieldAlert size={12} /> AI Generated
-                        </span>
-                      ) : (
-                        <span className="badge-status badge-human">
-                          <ShieldCheck size={12} /> Human
-                        </span>
-                      )}
-                    </td>
-                    <td className="mono" style={{ fontWeight: '600', color: isFake ? 'var(--color-ai)' : 'var(--color-human)' }}>
-                      {confPercent}%
-                    </td>
-                    <td className="mono" style={{ color: 'var(--text-muted)' }}>
-                      {item.duration || '--'}
-                    </td>
-                    <td style={{ color: 'var(--text-muted)', fontSize: '0.8125rem' }}>
-                      {item.timestamp}
-                    </td>
-                    <td style={{ textAlign: 'right' }}>
-                      <button
-                        onClick={() => downloadForensicPdf(item)}
-                        className="btn-secondary"
-                        style={{ padding: '4px 8px', fontSize: '0.6875rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                        title="Download forensic PDF report"
-                      >
-                        <Download size={11} /> PDF
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                  return (
+                    <tr key={item.id}>
+                      <td style={{ fontWeight: '500', color: 'var(--text-primary)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <FileAudio size={14} color="var(--text-muted)" />
+                          <span className="mono">{item.filename}</span>
+                        </div>
+                      </td>
+                      <td style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>Audio ({ext})</td>
+                      <td>
+                        {isFake ? (
+                          <span className="badge-status badge-ai">
+                            <ShieldAlert size={12} /> AI Generated
+                          </span>
+                        ) : (
+                          <span className="badge-status badge-human">
+                            <ShieldCheck size={12} /> Human
+                          </span>
+                        )}
+                      </td>
+                      <td className="mono" style={{ fontWeight: '600', color: isFake ? 'var(--color-ai)' : 'var(--color-human)' }}>
+                        {confPercent}%
+                      </td>
+                      <td className="mono" style={{ color: 'var(--text-muted)' }}>
+                        {item.duration || '--'}
+                      </td>
+                      <td style={{ color: 'var(--text-muted)', fontSize: '0.8125rem' }}>
+                        {item.timestamp}
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <button
+                          onClick={() => downloadForensicPdf(item)}
+                          className="btn-secondary"
+                          style={{ padding: '4px 8px', fontSize: '0.6875rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                          title="Download forensic PDF report"
+                        >
+                          <Download size={11} /> PDF
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

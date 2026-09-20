@@ -170,7 +170,8 @@ export default function SamplesView({ onSelectClip, isLoading, selectedClipId })
 
       {/* Data Table */}
       <div className="vg-panel" style={{ padding: 0, overflow: 'hidden' }}>
-        <table className="vg-table">
+        <div className="vg-table-container">
+          <table className="vg-table">
           <thead>
             <tr>
               <th>Sample</th>
@@ -257,6 +258,7 @@ export default function SamplesView({ onSelectClip, isLoading, selectedClipId })
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

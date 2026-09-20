@@ -103,7 +103,8 @@ export default function HistoryView({ onNavigate, reports = [] }) {
       ) : (
         /* Audit Log Table */
         <div className="vg-panel" style={{ padding: 0, overflow: 'hidden' }}>
-          <table className="vg-table">
+          <div className="vg-table-container">
+            <table className="vg-table">
             <thead>
               <tr>
                 <th>Audit ID</th>
@@ -153,7 +154,8 @@ export default function HistoryView({ onNavigate, reports = [] }) {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
       )}
     </div>

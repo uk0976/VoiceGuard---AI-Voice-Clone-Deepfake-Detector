@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { AudioWaveform, FileAudio, Radio, SlidersHorizontal, Menu } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
 import OverviewView from './views/OverviewView';
@@ -17,6 +18,7 @@ import { analyzeAudioFile, API_BASE } from './api';
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [currentView, setCurrentView] = useState('overview');
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -180,10 +182,18 @@ export default function App() {
       {/* Brand Opening Transition Splash Screen */}
       {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
 
-      {/* Fixed Left Sidebar Shell */}
+      {/* Mobile Backdrop Overlay */}
+      <div 
+        className={`sidebar-backdrop ${isMobileSidebarOpen ? 'open' : ''}`}
+        onClick={() => setIsMobileSidebarOpen(false)}
+      />
+
+      {/* Fixed Left Sidebar Shell (Responsive Off-Canvas Drawer on Mobile) */}
       <Sidebar
         currentView={currentView}
         setCurrentView={setCurrentView}
+        isOpen={isMobileSidebarOpen}
+        onClose={() => setIsMobileSidebarOpen(false)}
       />
 
       {/* Main Application Workstation Content */}
@@ -193,10 +203,11 @@ export default function App() {
           currentView={currentView}
           onReset={handleReset}
           hasResult={!!analysisResult}
+          onToggleSidebar={() => setIsMobileSidebarOpen(prev => !prev)}
         />
 
         {/* Dynamic Viewport Container */}
-        <main style={{ flex: 1, padding: '28px 32px', maxWidth: '1280px', width: '100%', margin: '0 auto' }}>
+        <main className="app-main-viewport">
           {currentView === 'overview' && (
             <OverviewView
               onNavigate={setCurrentView}
@@ -264,6 +275,66 @@ export default function App() {
             <TermsView onNavigate={setCurrentView} />
           )}
         </main>
+
+        {/* Bottom Navigation Bar for Mobile Devices */}
+        <nav className="mobile-bottom-nav">
+          <button
+            onClick={() => {
+              setCurrentView('overview');
+              setIsMobileSidebarOpen(false);
+            }}
+            className={`mobile-bottom-tab ${currentView === 'overview' ? 'active' : ''}`}
+            title="Overview"
+          >
+            <AudioWaveform size={18} />
+            <span>Overview</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setCurrentView('analyze');
+              setIsMobileSidebarOpen(false);
+            }}
+            className={`mobile-bottom-tab ${currentView === 'analyze' ? 'active' : ''}`}
+            title="Analyze"
+          >
+            <FileAudio size={18} />
+            <span>Analyze</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setCurrentView('live');
+              setIsMobileSidebarOpen(false);
+            }}
+            className={`mobile-bottom-tab ${currentView === 'live' ? 'active' : ''}`}
+            title="Live Stream"
+          >
+            <Radio size={18} />
+            <span>Live</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setCurrentView('samples');
+              setIsMobileSidebarOpen(false);
+            }}
+            className={`mobile-bottom-tab ${currentView === 'samples' ? 'active' : ''}`}
+            title="Demo Samples"
+          >
+            <SlidersHorizontal size={18} />
+            <span>Samples</span>
+          </button>
+
+          <button
+            onClick={() => setIsMobileSidebarOpen(prev => !prev)}
+            className={`mobile-bottom-tab ${isMobileSidebarOpen ? 'active' : ''}`}
+            title="More Options"
+          >
+            <Menu size={18} />
+            <span>Menu</span>
+          </button>
+        </nav>
       </div>
     </div>
   );

@@ -585,84 +585,86 @@ export default function AnalyzeView({ onAnalyze, isLoading, error, result, activ
               Detection Signals
             </div>
 
-            <table className="vg-table">
-              <thead>
-                <tr>
-                  <th>Signal</th>
-                  <th>Value</th>
-                  <th>Assessment</th>
-                  <th>Engineering Note</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style={{ fontWeight: '500', color: 'var(--text-primary)' }}>Pitch variation & micro-jitter</td>
-                  <td className="mono">{jitterValDisplay}</td>
-                  <td>
-                    <span className={`badge-status ${isJitterAbnormal ? 'badge-ai' : 'badge-human'}`}>
-                      {jitterAssessment}
-                    </span>
-                  </td>
-                  <td style={{ color: 'var(--text-muted)' }}>
-                    {jitterNote}
-                  </td>
-                </tr>
-
-                <tr>
-                  <td style={{ fontWeight: '500', color: 'var(--text-primary)' }}>Spectral flatness ratio</td>
-                  <td className="mono">{flatnessValDisplay}</td>
-                  <td>
-                    <span className={`badge-status ${isFlatnessElevated ? 'badge-ai' : 'badge-human'}`}>
-                      {flatnessAssessment}
-                    </span>
-                  </td>
-                  <td style={{ color: 'var(--text-muted)' }}>
-                    {flatnessNote}
-                  </td>
-                </tr>
-
-                <tr>
-                  <td style={{ fontWeight: '500', color: 'var(--text-primary)' }}>Pause & respiration cadence</td>
-                  <td className="mono">{pauseValDisplay}</td>
-                  <td>
-                    <span className={`badge-status ${isPauseAbnormal ? 'badge-ai' : 'badge-human'}`}>
-                      {pauseAssessment}
-                    </span>
-                  </td>
-                  <td style={{ color: 'var(--text-muted)' }}>
-                    {pauseNote}
-                  </td>
-                </tr>
-
-                <tr>
-                  <td style={{ fontWeight: '500', color: 'var(--text-primary)' }}>Wav2Vec2 sequence classifier</td>
-                  <td className="mono">{modelPercent}%</td>
-                  <td>
-                    <span className={`badge-status ${isModelSynthetic ? 'badge-ai' : 'badge-human'}`}>
-                      {modelAssessment}
-                    </span>
-                  </td>
-                  <td style={{ color: 'var(--text-muted)' }}>
-                    {modelNote}
-                  </td>
-                </tr>
-
-                {rawCentroid !== undefined && (
+            <div className="vg-table-container">
+              <table className="vg-table">
+                <thead>
                   <tr>
-                    <td style={{ fontWeight: '500', color: 'var(--text-primary)' }}>Spectral centroid (frequency mass)</td>
-                    <td className="mono">{Math.round(rawCentroid)} Hz</td>
+                    <th>Signal</th>
+                    <th>Value</th>
+                    <th>Assessment</th>
+                    <th>Engineering Note</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style={{ fontWeight: '500', color: 'var(--text-primary)' }}>Pitch variation & micro-jitter</td>
+                    <td className="mono">{jitterValDisplay}</td>
                     <td>
-                      <span className="badge-status badge-human">
-                        Nominal
+                      <span className={`badge-status ${isJitterAbnormal ? 'badge-ai' : 'badge-human'}`}>
+                        {jitterAssessment}
                       </span>
                     </td>
                     <td style={{ color: 'var(--text-muted)' }}>
-                      Energy center-of-mass within organic vocal formant spectrum
+                      {jitterNote}
                     </td>
                   </tr>
-                )}
-              </tbody>
-            </table>
+
+                  <tr>
+                    <td style={{ fontWeight: '500', color: 'var(--text-primary)' }}>Spectral flatness ratio</td>
+                    <td className="mono">{flatnessValDisplay}</td>
+                    <td>
+                      <span className={`badge-status ${isFlatnessElevated ? 'badge-ai' : 'badge-human'}`}>
+                        {flatnessAssessment}
+                      </span>
+                    </td>
+                    <td style={{ color: 'var(--text-muted)' }}>
+                      {flatnessNote}
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style={{ fontWeight: '500', color: 'var(--text-primary)' }}>Pause & respiration cadence</td>
+                    <td className="mono">{pauseValDisplay}</td>
+                    <td>
+                      <span className={`badge-status ${isPauseAbnormal ? 'badge-ai' : 'badge-human'}`}>
+                        {pauseAssessment}
+                      </span>
+                    </td>
+                    <td style={{ color: 'var(--text-muted)' }}>
+                      {pauseNote}
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style={{ fontWeight: '500', color: 'var(--text-primary)' }}>Wav2Vec2 sequence classifier</td>
+                    <td className="mono">{modelPercent}%</td>
+                    <td>
+                      <span className={`badge-status ${isModelSynthetic ? 'badge-ai' : 'badge-human'}`}>
+                        {modelAssessment}
+                      </span>
+                    </td>
+                    <td style={{ color: 'var(--text-muted)' }}>
+                      {modelNote}
+                    </td>
+                  </tr>
+
+                  {rawCentroid !== undefined && (
+                    <tr>
+                      <td style={{ fontWeight: '500', color: 'var(--text-primary)' }}>Spectral centroid (frequency mass)</td>
+                      <td className="mono">{Math.round(rawCentroid)} Hz</td>
+                      <td>
+                        <span className="badge-status badge-human">
+                          Nominal
+                        </span>
+                      </td>
+                      <td style={{ color: 'var(--text-muted)' }}>
+                        Energy center-of-mass within organic vocal formant spectrum
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* Explainability Findings & Acoustic Notes */}
