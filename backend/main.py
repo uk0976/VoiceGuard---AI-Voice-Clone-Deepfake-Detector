@@ -44,16 +44,7 @@ if os.path.exists(demo_clips_dir):
 
 @app.on_event("startup")
 async def startup_event():
-    import asyncio
-    async def _warm():
-        try:
-            from analysis import get_model_and_extractor
-            logger.info("Pre-warming VoiceGuard neural model in background...")
-            await asyncio.to_thread(get_model_and_extractor)
-            logger.info("VoiceGuard neural model pre-warmed successfully.")
-        except Exception as e:
-            logger.warning(f"Model pre-warm note: {e}")
-    asyncio.create_task(_warm())
+    logger.info("VoiceGuard API engine initialized and ready.")
 
 
 class AnalysisResponse(BaseModel):

@@ -39,10 +39,15 @@ TARGET_SAMPLE_RATE = 16000
 
 def get_model_and_extractor():
     """
-    Lazy load the Hugging Face feature extractor and model.
-    Thread-safe and caches loaded instances in memory for fast subsequent inferences.
+    Lazy load the Hugging Face feature extractor and model if enabled.
+    Protected against OOM crashes on memory-constrained cloud environments (e.g. Render 512MB free tier).
     """
     global _FEATURE_EXTRACTOR, _MODEL, _DEVICE
+
+    # On memory-constrained cloud instances (512MB), avoid loading the heavy 380MB transformer to prevent SIGKILL 502 crashes
+    enable_heavy = os.environ.get("ENABLE_HEAVY_TRANSFORMER", "0").strip().lower() in ("1", "true", "yes")
+    if not enable_heavy:
+        return None, None, None
 
     if _MODEL is not None and _FEATURE_EXTRACTOR is not None:
         return _FEATURE_EXTRACTOR, _MODEL, _DEVICE
