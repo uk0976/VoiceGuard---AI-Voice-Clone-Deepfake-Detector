@@ -30,15 +30,19 @@ def extract_pitch_jitter(y: np.ndarray, sr: int) -> Tuple[float, bool, float, fl
     - Returns: (jitter_score [0..1 where 1 is synthetic], flag_triggered, relative_jitter, std_f0)
     """
     try:
+        # Cap segment to at most 5.0 seconds for sub-second CPU calculation
+        max_samples = int(sr * 5.0)
+        y_proc = y[:max_samples] if len(y) > max_samples else y
+
         # Optimize pyin range for speech fundamental frequencies (65Hz - 500Hz)
         fmin = librosa.note_to_hz("C2")  # ~65 Hz
         fmax = librosa.note_to_hz("B4")  # ~493 Hz
         
         frame_length = 2048
-        hop_length = 512
+        hop_length = 1024
         
         f0, voiced_flag, _ = librosa.pyin(
-            y,
+            y_proc,
             fmin=fmin,
             fmax=fmax,
             sr=sr,
