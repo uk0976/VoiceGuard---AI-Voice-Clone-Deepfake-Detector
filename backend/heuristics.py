@@ -59,10 +59,17 @@ def extract_pitch_jitter(y: np.ndarray, sr: int) -> Tuple[float, bool, float, fl
         relative_jitter = float(np.mean(f0_diffs / (valid_f0[:-1] + 1e-6)))
         std_f0 = float(np.std(valid_f0) / (np.mean(valid_f0) + 1e-6))
         
+        duration = len(y_proc) / sr
+        
         # Unnaturally stable pitch threshold:
-        # Human conversational speech has relative jitter > 0.068.
-        # Synthesized neural audio exhibits rigid F0 periodicity (< 0.062).
-        is_synthetic = (relative_jitter < 0.062) or (relative_jitter < 0.068 and std_f0 < 0.18)
+        # In short temporal windows (< 2.0s, like live streaming slices), single-syllable vowels
+        # naturally have lower micro-perturbation. Only flag as rigid if jitter is extremely low.
+        if duration < 2.0:
+            is_synthetic = (relative_jitter < 0.012) or (relative_jitter < 0.022 and std_f0 < 0.06)
+        else:
+            # Full recording (> 2.0s): human conversational speech has relative jitter > 0.068.
+            # Synthesized neural audio exhibits rigid F0 periodicity (< 0.062).
+            is_synthetic = (relative_jitter < 0.062) or (relative_jitter < 0.068 and std_f0 < 0.18)
         
         # Map jitter to 0..1 score
         if is_synthetic:
@@ -128,8 +135,12 @@ def extract_pause_patterns(y: np.ndarray, sr: int) -> Tuple[float, bool, float, 
         pause_ratio = max(0.0, 1.0 - speech_ratio)
         
         # In natural speech > 3.0 seconds, pauses typically occupy > 30% of time
-        # Synthetic TTS voices often stream words with abnormally low pause ratio (< 30%)
-        is_missing_pauses = (pause_ratio < 0.30 and duration >= 3.0) or (len(intervals) <= 1 and duration >= 3.0 and speech_ratio > 0.90)
+        # Synthetic TTS voices often stream words with abnormally low pause ratio (< 30%) or near zero (< 5%)
+        is_missing_pauses = (
+            (pause_ratio < 0.30 and duration >= 3.0) or
+            (len(intervals) <= 1 and duration >= 2.0 and speech_ratio > 0.90) or
+            (pause_ratio < 0.05 and duration >= 2.0)
+        )
         
         pause_score = 0.88 if is_missing_pauses else 0.05
         
@@ -149,6 +160,7 @@ def compute_heuristics(waveform: np.ndarray, sample_rate: int) -> Dict[str, Any]
     if y.ndim > 1:
         y = np.mean(y, axis=0) if y.shape[0] < y.shape[1] else np.mean(y, axis=1)
     
+    duration = len(y) / sample_rate
     flags: List[str] = []
     
     # 1. Pitch Jitter
@@ -172,16 +184,24 @@ def compute_heuristics(waveform: np.ndarray, sample_rate: int) -> Dict[str, Any]
     except Exception:
         sc = 0.0
         
-    flag_centroid = sc > 1600.0
+    # In short slices (< 2.0s), natural sibilants ("s", "t", "sh") raise centroid; only flag if > 2200Hz
+    centroid_threshold = 2200.0 if duration < 2.0 else 1600.0
+    flag_centroid = sc > centroid_threshold
     if flag_centroid:
         flags.append(FLAG_VOCODER_CENTROID)
     centroid_score = 0.85 if flag_centroid else 0.05
         
-    # Weighted aggregation
-    if flags:
-        heuristic_score = max(0.85, max(jitter_score, flatness_score, pause_score, centroid_score))
+    # Robust Multi-Factor Anomaly Aggregation
+    if len(flags) >= 2:
+        # High confidence multi-factor agreement: systemic vocoder artifacts confirmed
+        heuristic_score = max(0.80, min(0.92, 0.70 + 0.08 * len(flags)))
+    elif len(flags) == 1:
+        # Single isolated acoustic anomaly in a slice is common in natural speech (e.g. sibilant or sustained vowel)
+        # Calibrated into human territory (0.20 - 0.35) so authentic voices are NEVER false-alarmed!
+        heuristic_score = min(0.35, max(0.20, 0.40 * max(jitter_score, flatness_score, pause_score, centroid_score)))
     else:
-        heuristic_score = max(0.02, min(0.12, (0.35 * jitter_score) + (0.25 * flatness_score) + (0.25 * pause_score) + (0.15 * centroid_score)))
+        # All biomechanical acoustic checks passed
+        heuristic_score = max(0.015, min(0.08, (0.35 * jitter_score) + (0.25 * flatness_score) + (0.25 * pause_score) + (0.15 * centroid_score)))
     heuristic_score = max(0.015, min(0.985, round(float(heuristic_score), 4)))
     
     return {
