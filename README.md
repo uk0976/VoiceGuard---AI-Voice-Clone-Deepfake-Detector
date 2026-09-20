@@ -22,7 +22,29 @@
 
 ---
 
+## 🌐 Live Production Deployments & Access
+
+VoiceGuard is publicly deployed and accessible online across cloud-hosted frontend and backend microservices:
+
+| Service | Deployment URL | Status & Description |
+| :--- | :--- | :--- |
+| **Frontend Workstation** | [https://voiceguard-app.onrender.com](https://voiceguard-app.onrender.com) | Production Dark UI with real-time waveform inspection, live microphone streaming, and PDF export |
+| **Backend Forensic API** | [https://voiceguard-ai-voice-clone-deepfake.onrender.com](https://voiceguard-ai-voice-clone-deepfake.onrender.com) | FastAPI cloud microservice with real-time audio analysis and WebSocket telemetry stream |
+| **Interactive API Docs** | [Swagger Documentation](https://voiceguard-ai-voice-clone-deepfake.onrender.com/docs) | OpenAPI interactive explorer and endpoint schema validation |
+| **Health Check Endpoint** | [/health Probe](https://voiceguard-ai-voice-clone-deepfake.onrender.com/health) | Uptime telemetry and zero-persistence container monitoring |
+
+### 🚀 Project Overview & Live Access
+**VoiceGuard** is an open-source, enterprise-grade biometric audio forensics system engineered to detect synthetic voice clones, AI-generated speech, and audio deepfakes in both **pre-recorded files** and **live microphone streams**.
+
+By combining deep neural sequence representations (`Wav2Vec2`) with mathematical signal-processing heuristics (`Librosa`), VoiceGuard exposes acoustic artifacts invisible to the human ear—such as phase incoherence, micro-jitter absence, unnatural spectral flatness, and missing breath intervals—providing transparent, court-admissible forensic insights rather than opaque black-box verdicts.
+
+🔗 **Access the Deployed Project:**  
+👉 **[Launch VoiceGuard Live Application: https://voiceguard-app.onrender.com](https://voiceguard-app.onrender.com)**
+
+---
+
 ## 📌 Table of Contents
+- [Live Production Deployments & Access](#-live-production-deployments--access)
 - [Executive Overview](#-executive-overview)
 - [Why VoiceGuard?](#-why-voiceguard)
 - [Key Capabilities & Features](#-key-capabilities--features)
@@ -258,10 +280,15 @@ Open your browser and navigate to: **[http://localhost:5173](http://localhost:51
 
 ## 📡 API Reference
 
+- **Production REST Base URL**: `https://voiceguard-ai-voice-clone-deepfake.onrender.com`
+- **Production WebSocket URL**: `wss://voiceguard-ai-voice-clone-deepfake.onrender.com/ws/stream`
+- **Interactive Swagger Explorer**: `https://voiceguard-ai-voice-clone-deepfake.onrender.com/docs`
+- **Local Base URL**: `http://127.0.0.1:8000`
+
 ### REST Endpoints
 
 #### 1. Analyze Audio File
-- **Route**: `POST /analyze`
+- **Route**: `POST /analyze` (Cloud: `https://voiceguard-ai-voice-clone-deepfake.onrender.com/analyze`)
 - **Content-Type**: `multipart/form-data`
 - **Payload**: `file` (WAV, MP3, M4A, FLAC, OGG, WebM up to 25 MB)
 - **Response**:
