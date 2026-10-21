@@ -1,0 +1,16 @@
+name: Keep VoiceGuard Backend Warm
+
+on:
+  schedule:
+    # Runs every 10 minutes to prevent Render free-tier idle spin down (sleeps at 15m)
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping VoiceGuard Render Health Endpoint
+        run: |
+          echo "Pinging VoiceGuard cloud backend to ensure 24/7 uptime..."
+          curl -s -f -m 30 "https://voiceguard-ai-voice-clone-deepfake.onrender.com/health" || echo "Ping dispatched"

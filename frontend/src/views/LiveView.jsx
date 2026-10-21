@@ -31,11 +31,14 @@ export default function LiveView({ onSaveReport, onNavigate }) {
   const [sessionSummary, setSessionSummary] = useState(null);
   const [reportSaved, setReportSaved] = useState(false);
   const [pdfDownloaded, setPdfDownloaded] = useState(false);
+  const [connectingProgress, setConnectingProgress] = useState(null);
 
   const isListeningRef = useRef(false);
   const streamStatusRef = useRef('idle');
   const sessionChunksRef = useRef([]);
   const sessionStartTimeRef = useRef(null);
+  const attemptRef = useRef(0);
+  const reconnectTimeoutRef = useRef(null);
 
   const socketRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -198,6 +201,10 @@ export default function LiveView({ onSaveReport, onNavigate }) {
   };
 
   useEffect(() => {
+    // Eagerly pre-warm backend when Live View mounts
+    const apiUrl = import.meta.env.VITE_API_URL || API_BASE;
+    fetch(`${apiUrl}/health`).catch(() => {});
+
     return () => {
       stopStreaming();
     };
@@ -244,9 +251,11 @@ export default function LiveView({ onSaveReport, onNavigate }) {
     setSessionSummary(null);
     setReportSaved(false);
     setPdfDownloaded(false);
+    setConnectingProgress('Initializing microphone...');
     sessionChunksRef.current = [];
     sessionStartTimeRef.current = Date.now();
     updateStreamStatus('connecting');
+    attemptRef.current = 0;
 
     try {
       if (!navigator?.mediaDevices?.getUserMedia) {
@@ -262,9 +271,12 @@ export default function LiveView({ onSaveReport, onNavigate }) {
       });
       mediaStreamRef.current = stream;
 
+      const apiUrl = import.meta.env.VITE_API_URL || API_BASE;
+      // Pre-warm the backend immediately via HTTP
+      fetch(`${apiUrl}/health`).catch(() => {});
+
       let wsUrl = import.meta.env.VITE_WS_URL;
       if (!wsUrl) {
-        const apiUrl = import.meta.env.VITE_API_URL || API_BASE;
         if (apiUrl) {
           try {
             const parsed = new URL(apiUrl);
@@ -282,61 +294,91 @@ export default function LiveView({ onSaveReport, onNavigate }) {
         }
       }
 
-      const ws = new WebSocket(wsUrl);
-      ws.binaryType = 'arraybuffer';
-      socketRef.current = ws;
+      const MAX_CONNECT_ATTEMPTS = 8;
 
-      const connectTimeout = setTimeout(() => {
-        if (ws.readyState !== WebSocket.OPEN) {
-          try { ws.close(); } catch {}
-          cleanupResources();
-          updateStreamStatus('error');
-          setErrorType('disconnect');
-          setErrorMessage('Connecting to live streaming server timed out. If the cloud instance was asleep, it has now been awakened. Please click "Retry connection".');
+      const tryConnectSocket = () => {
+        if (streamStatusRef.current !== 'connecting') return;
+        attemptRef.current += 1;
+
+        if (attemptRef.current > 1) {
+          setConnectingProgress(`Connecting to neural engine (Waking cloud server, attempt ${attemptRef.current}/${MAX_CONNECT_ATTEMPTS})...`);
+        } else {
+          setConnectingProgress('Connecting to neural stream...');
         }
-      }, 12000);
 
-      ws.onopen = () => {
-        clearTimeout(connectTimeout);
-        updateStreamStatus('listening');
-        updateIsListening(true);
-      };
+        // Fire health ping on every attempt to accelerate container spin-up
+        fetch(`${apiUrl}/health`).catch(() => {});
 
-      ws.onmessage = (event) => {
         try {
-          const data = JSON.parse(event.data);
-          setLatestData(data);
-          setChunkCount((prev) => prev + 1);
-          if (sessionChunksRef.current) {
-            sessionChunksRef.current.push(data);
+          if (socketRef.current) {
+            try { socketRef.current.close(); } catch {}
+            socketRef.current = null;
           }
-        } catch (err) {
-          console.error('Failed to parse WebSocket message:', err);
+
+          const ws = new WebSocket(wsUrl);
+          ws.binaryType = 'arraybuffer';
+          socketRef.current = ws;
+
+          ws.onopen = () => {
+            if (reconnectTimeoutRef.current) {
+              clearTimeout(reconnectTimeoutRef.current);
+              reconnectTimeoutRef.current = null;
+            }
+            setConnectingProgress(null);
+            updateStreamStatus('listening');
+            updateIsListening(true);
+          };
+
+          ws.onmessage = (event) => {
+            try {
+              const data = JSON.parse(event.data);
+              setLatestData(data);
+              setChunkCount((prev) => prev + 1);
+              if (sessionChunksRef.current) {
+                sessionChunksRef.current.push(data);
+              }
+            } catch (err) {
+              console.error('Failed to parse WebSocket message:', err);
+            }
+          };
+
+          ws.onerror = (err) => {
+            console.warn(`WebSocket connection attempt ${attemptRef.current} failed:`, err);
+            if (streamStatusRef.current === 'connecting') {
+              if (attemptRef.current < MAX_CONNECT_ATTEMPTS) {
+                setConnectingProgress(`Waking up cloud neural engine... (Attempt ${attemptRef.current + 1}/${MAX_CONNECT_ATTEMPTS})`);
+                reconnectTimeoutRef.current = setTimeout(tryConnectSocket, 3000);
+              } else {
+                cleanupResources();
+                updateStreamStatus('error');
+                setErrorType('disconnect');
+                setErrorMessage('Unable to connect to live streaming service after multiple attempts. The cloud instance might still be starting up. Please click "Retry connection".');
+                setConnectingProgress(null);
+              }
+            }
+          };
+
+          ws.onclose = (event) => {
+            if (isListeningRef.current || streamStatusRef.current === 'listening') {
+              cleanupResources();
+              if (event.code === 1000) {
+                updateStreamStatus('idle');
+              } else {
+                updateStreamStatus('disconnected');
+                setErrorType('disconnect');
+                setErrorMessage('WebSocket stream disconnected from server. The backend may be temporarily busy. Please retry.');
+              }
+            }
+          };
+        } catch (sockErr) {
+          console.warn('Socket instantiation error:', sockErr);
+          if (attemptRef.current < MAX_CONNECT_ATTEMPTS && streamStatusRef.current === 'connecting') {
+            reconnectTimeoutRef.current = setTimeout(tryConnectSocket, 3000);
+          }
         }
       };
 
-      ws.onerror = (err) => {
-        clearTimeout(connectTimeout);
-        console.error('WebSocket error:', err);
-        cleanupResources();
-        updateStreamStatus('error');
-        setErrorType('disconnect');
-        setErrorMessage('WebSocket connection failed. The backend service may be spinning up from sleep. Please try again.');
-      };
-
-      ws.onclose = (event) => {
-        clearTimeout(connectTimeout);
-        if (isListeningRef.current || streamStatusRef.current === 'connecting' || streamStatusRef.current === 'listening') {
-          cleanupResources();
-          if (event.code === 1000) {
-            updateStreamStatus('idle');
-          } else {
-            updateStreamStatus('disconnected');
-            setErrorType('disconnect');
-            setErrorMessage('WebSocket stream disconnected from server. The backend may be temporarily busy. Please retry.');
-          }
-        }
-      };
+      tryConnectSocket();
 
       setLatestData(null);
       setChunkCount(0);
@@ -495,6 +537,12 @@ export default function LiveView({ onSaveReport, onNavigate }) {
 
   const cleanupResources = () => {
     updateIsListening(false);
+
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+    setConnectingProgress(null);
 
     if (flushIntervalRef.current) {
       clearInterval(flushIntervalRef.current);
@@ -683,10 +731,10 @@ export default function LiveView({ onSaveReport, onNavigate }) {
               <button
                 disabled
                 className="btn-primary"
-                style={{ width: '100%', opacity: 0.7, cursor: 'wait' }}
+                style={{ width: '100%', opacity: 0.85, cursor: 'wait', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
               >
                 <Loader2 size={15} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
-                Connecting microphone...
+                {connectingProgress || 'Connecting to stream...'}
               </button>
             ) : !isListening ? (
               <button
@@ -730,7 +778,7 @@ export default function LiveView({ onSaveReport, onNavigate }) {
               Pipeline State
             </div>
             <span className={`badge-status ${isListening ? 'badge-human' : streamStatus === 'connecting' ? 'badge-warning' : streamStatus === 'disconnected' || streamStatus === 'error' ? 'badge-ai' : 'badge-neutral'}`}>
-              {isListening ? 'Active' : streamStatus === 'connecting' ? 'Connecting...' : streamStatus === 'disconnected' ? 'Disconnected' : 'Standby'}
+              {isListening ? 'Active' : streamStatus === 'connecting' ? (connectingProgress ? 'Connecting / Waking...' : 'Connecting...') : streamStatus === 'disconnected' ? 'Disconnected' : 'Standby'}
             </span>
           </div>
 
@@ -738,7 +786,7 @@ export default function LiveView({ onSaveReport, onNavigate }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 10px', backgroundColor: 'var(--surface-secondary)', borderRadius: 'var(--radius-sm)' }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Connection</span>
               <span className="mono" style={{ fontSize: '0.75rem', color: isListening ? 'var(--color-human)' : streamStatus === 'connecting' ? 'var(--color-warning)' : 'var(--text-primary)' }}>
-                {streamStatus === 'listening' ? 'WebSocket Connected' : streamStatus === 'connecting' ? 'CONNECTING...' : streamStatus.toUpperCase()}
+                {streamStatus === 'listening' ? 'WebSocket Connected' : streamStatus === 'connecting' ? (connectingProgress || 'CONNECTING...') : streamStatus.toUpperCase()}
               </span>
             </div>
 

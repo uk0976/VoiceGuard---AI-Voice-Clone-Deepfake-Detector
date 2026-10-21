@@ -79,10 +79,23 @@ export default function App() {
   };
 
   // Eagerly ping backend /health to pre-warm the cloud instance on first page visit
+  // and maintain a 4-minute heartbeat interval so the instance never sleeps while site is open
   useEffect(() => {
     const warmupUrl = API_BASE ? `${API_BASE}/health` : '/health';
     fetch(warmupUrl).catch(() => {});
+
+    const heartbeat = setInterval(() => {
+      fetch(warmupUrl).catch(() => {});
+    }, 4 * 60 * 1000);
+
+    return () => clearInterval(heartbeat);
   }, []);
+
+  // Pre-warm backend whenever user switches view (e.g. to Live Detection or Analyze)
+  useEffect(() => {
+    const warmupUrl = API_BASE ? `${API_BASE}/health` : '/health';
+    fetch(warmupUrl).catch(() => {});
+  }, [currentView]);
 
   const handleAnalyzeFile = async (fileOrClip, maybeClipMeta = null) => {
     const thisRequestId = ++requestIdRef.current;
